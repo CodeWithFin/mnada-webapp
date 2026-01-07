@@ -40,16 +40,16 @@ export default function Cart() {
 
         <div className="space-y-4 mb-8">
           {items.map(item => (
-            <div key={item.id} className="border border-zinc-800 bg-zinc-900/20 p-6 rounded-lg flex gap-6">
-              <Link to={`/products/${item.product.id}`} className="w-24 h-24 bg-zinc-900 rounded overflow-hidden flex-shrink-0">
+            <div key={item.id} className="border border-zinc-800 bg-zinc-900/20 p-4 sm:p-6 rounded-lg flex flex-col sm:flex-row gap-4 sm:gap-6">
+              <Link to={`/products/${item.product.id}`} className="w-full sm:w-24 aspect-square bg-zinc-900 rounded overflow-hidden flex-shrink-0">
                 <img src={item.product.images[0] || '/placeholder.jpg'} alt={item.product.name} className="w-full h-full object-cover" />
               </Link>
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                 <Link to={`/products/${item.product.id}`}>
                   <h3 className="font-semibold mb-2 hover:text-neon transition-colors">{item.product.name}</h3>
                 </Link>
-                <p className="text-neon font-bold mb-4">{formatPriceKSH(item.product.price)}</p>
-                <div className="flex items-center gap-4">
+                <p className="text-neon font-bold mb-3">{formatPriceKSH(item.product.price)}</p>
+                <div className="flex items-center flex-wrap gap-3 sm:gap-4 mt-1">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -73,15 +73,15 @@ export default function Cart() {
                   </button>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">{formatPriceKSH(item.product.price * item.quantity)}</p>
+              <div className="text-left sm:text-right sm:self-start sm:w-32">
+                <p className="font-semibold text-lg sm:text-base">{formatPriceKSH(item.product.price * item.quantity)}</p>
               </div>
             </div>
           ))}
         </div>
 
         <div className="border-t border-zinc-800 pt-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
             <span className="text-xl font-semibold">Total</span>
             <span className="text-2xl text-neon font-bold">{formatPriceKSH(getTotal())}</span>
           </div>

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import api from '../utils/api'
 import { User, Post } from '../types'
 import { useAuthStore } from '../store/authStore'
+import CreatePost from '../components/CreatePost'
 
 export default function Profile() {
   const { userId } = useParams()
@@ -12,6 +13,7 @@ export default function Profile() {
   const [following, setFollowing] = useState<User[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showComposer, setShowComposer] = useState(false)
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -23,10 +25,10 @@ export default function Profile() {
     try {
       const [userResponse, postsResponse] = await Promise.all([
         api.get(`/users/${userId}`),
-        api.get('/posts/explore')
+        api.get(`/posts/user/${userId}`)
       ])
       setProfileUser(userResponse.data)
-      setPosts(postsResponse.data.filter((post: Post) => post.user.id === userId))
+      setPosts(postsResponse.data)
     } catch (error) {
       console.error('Failed to fetch profile:', error)
     } finally {
@@ -112,12 +114,20 @@ export default function Profile() {
                   </button>
                 )}
                 {isOwnProfile && (
-                  <Link
-                    to="/profile/edit"
-                    className="px-6 py-2 rounded-full font-semibold text-sm bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-700 transition-colors"
-                  >
-                    Edit Profile
-                  </Link>
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      to="/profile/edit"
+                      className="px-6 py-2 rounded-full font-semibold text-sm bg-zinc-900 border border-zinc-800 text-white hover:border-zinc-700 transition-colors"
+                    >
+                      Edit Profile
+                    </Link>
+                    <button
+                      onClick={() => setShowComposer(prev => !prev)}
+                      className="px-6 py-2 rounded-full font-semibold text-sm bg-neon text-black hover:bg-white transition-colors"
+                    >
+                      {showComposer ? 'Close Composer' : 'Create Post'}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -159,6 +169,10 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {isOwnProfile && showComposer && (
+          <CreatePost onPostCreated={() => { setShowComposer(false); fetchProfile() }} />
+        )}
 
         {/* Posts Grid */}
         {posts.length === 0 ? (

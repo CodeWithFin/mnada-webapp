@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        neon: '#C0FF00',
+        neon: '#FF8C00',
         dark: '#050505',
         panel: '#0A0A0A'
       },

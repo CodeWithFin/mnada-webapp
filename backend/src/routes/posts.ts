@@ -144,6 +144,44 @@ router.get('/explore', async (req, res) => {
   }
 });
 
+// Get posts for a specific user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const posts = await prisma.post.findMany({
+      where: { userId: req.params.userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true
+          }
+        },
+        likes: true,
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 3
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(posts);
+  } catch (error) {
+    console.error('Get user posts error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get single post
 router.get('/:id', async (req, res) => {
   try {

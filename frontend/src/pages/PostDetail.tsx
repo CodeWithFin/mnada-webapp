@@ -75,81 +75,78 @@ export default function PostDetail() {
   }
 
   const isLiked = user && post.likes.some(like => like.userId === user.id)
+  const showCaption = post.caption && post.caption.trim().toLowerCase() !== post.user.username.trim().toLowerCase()
 
   return (
     <div className="min-h-screen pt-24 px-6 pb-12">
       <div className="max-w-4xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="aspect-square bg-zinc-900 rounded-lg overflow-hidden">
-            <img src={post.image} alt={post.caption || 'Post'} className="w-full h-full object-cover" />
+        <div className="border border-zinc-800 bg-zinc-950/60 rounded-2xl overflow-hidden shadow-lg">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-zinc-800 bg-black/40">
+            <Link to={`/profile/${post.user.id}`} className="flex items-center gap-3">
+              <img
+                src={post.user.avatar || '/placeholder-avatar.jpg'}
+                alt={post.user.username}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <span className="font-semibold text-lg leading-tight hover:text-neon transition-colors">
+                {post.user.username}
+              </span>
+            </Link>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-4 border-b border-zinc-800">
-              <Link to={`/profile/${post.user.id}`}>
-                <img
-                  src={post.user.avatar || '/placeholder-avatar.jpg'}
-                  alt={post.user.username}
-                  className="w-10 h-10 rounded-full"
-                />
-              </Link>
-              <Link to={`/profile/${post.user.id}`} className="font-semibold hover:text-neon transition-colors">
-                {post.user.username}
-              </Link>
+          {/* Media */}
+          <div className="bg-black">
+            <div className="relative w-full">
+              <img src={post.image} alt={post.caption || 'Post'} className="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-4 sm:px-6 py-5 space-y-5">
+            {showCaption && (
+              <p className="text-zinc-100 text-base leading-relaxed">{post.caption}</p>
+            )}
+
+            <div className="flex items-center gap-3 text-sm text-zinc-400">
+              <button
+                onClick={handleLike}
+                disabled={!user}
+                className={`${isLiked ? 'text-red-500' : 'text-zinc-400'} hover:text-red-500 transition-colors disabled:opacity-50 flex items-center gap-2`}
+              >
+                <i data-lucide="heart" className="w-6 h-6 fill-current"></i>
+                <span>{post.likes.length} likes</span>
+              </button>
             </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {post.caption && (
-                <div>
-                  <Link to={`/profile/${post.user.id}`} className="font-semibold hover:text-neon transition-colors">
-                    {post.user.username}
-                  </Link>{' '}
-                  <span>{post.caption}</span>
+            <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+              {post.comments.map(comment => (
+                <div key={comment.id} className="flex gap-2 text-sm">
+                  <Link to={`/profile/${comment.user.id}`} className="font-semibold hover:text-neon transition-colors">
+                    {comment.user.username}
+                  </Link>
+                  <span className="text-zinc-200 leading-relaxed">{comment.content}</span>
                 </div>
-              )}
-
-              <div className="space-y-4">
-                {post.comments.map(comment => (
-                  <div key={comment.id}>
-                    <Link to={`/profile/${comment.user.id}`} className="font-semibold hover:text-neon transition-colors">
-                      {comment.user.username}
-                    </Link>{' '}
-                    <span>{comment.content}</span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
 
-            <div className="border-t border-zinc-800 pt-4 space-y-4">
-              <div className="flex items-center gap-4">
+            {user && (
+              <form onSubmit={handleComment} className="flex gap-3 pt-1">
+                <input
+                  type="text"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
+                />
                 <button
-                  onClick={handleLike}
-                  disabled={!user}
-                  className={`${isLiked ? 'text-red-500' : 'text-zinc-400'} hover:text-red-500 transition-colors disabled:opacity-50`}
+                  type="submit"
+                  className="px-4 py-2 bg-neon text-black font-semibold rounded hover:bg-white transition-colors"
                 >
-                  <i data-lucide="heart" className="w-6 h-6 fill-current"></i>
+                  Post
                 </button>
-                <span className="text-sm text-zinc-400">{post.likes.length} likes</span>
-              </div>
-
-              {user && (
-                <form onSubmit={handleComment} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-neon text-black font-semibold rounded hover:bg-white transition-colors"
-                  >
-                    Post
-                  </button>
-                </form>
-              )}
-            </div>
+              </form>
+            )}
           </div>
         </div>
       </div>

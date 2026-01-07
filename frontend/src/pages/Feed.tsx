@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import api from '../utils/api'
 import { Post } from '../types'
 import { useAuthStore } from '../store/authStore'
+import CreatePost from '../components/CreatePost'
 
 export default function Feed() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [showComposer, setShowComposer] = useState(false)
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -55,7 +57,21 @@ export default function Feed() {
   return (
     <div className="min-h-screen pt-24 px-6 pb-12">
       <div className="max-w-2xl mx-auto">
-        <h1 className="font-display text-3xl font-semibold mb-8">Your Feed</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h1 className="font-display text-3xl font-semibold">Your Feed</h1>
+          {user && (
+            <button
+              onClick={() => setShowComposer(prev => !prev)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon text-black font-semibold hover:bg-white transition-colors"
+            >
+              {showComposer ? 'Close Composer' : 'Create Post'}
+            </button>
+          )}
+        </div>
+
+        {showComposer && (
+          <CreatePost onPostCreated={() => { setShowComposer(false); fetchFeed() }} />
+        )}
 
         {posts.length === 0 ? (
           <div className="text-center py-12">
@@ -68,18 +84,17 @@ export default function Feed() {
           <div className="space-y-8">
             {posts.map(post => {
               const isLiked = post.likes.some(like => like.userId === user?.id)
+              const showCaption = post.caption && post.caption.trim().toLowerCase() !== post.user.username.trim().toLowerCase()
               return (
                 <div key={post.id} className="border border-zinc-800 bg-zinc-900/20 rounded-lg overflow-hidden">
-                  <div className="p-4 flex items-center gap-3">
-                    <Link to={`/profile/${post.user.id}`}>
+                  <div className="p-4 flex items-center gap-3 border-b border-zinc-800">
+                    <Link to={`/profile/${post.user.id}`} className="flex items-center gap-3">
                       <img
                         src={post.user.avatar || '/placeholder-avatar.jpg'}
                         alt={post.user.username}
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
-                    </Link>
-                    <Link to={`/profile/${post.user.id}`} className="font-semibold hover:text-neon transition-colors">
-                      {post.user.username}
+                      <span className="font-semibold hover:text-neon transition-colors">{post.user.username}</span>
                     </Link>
                   </div>
                   <Link to={`/post/${post.id}`}>
@@ -97,11 +112,8 @@ export default function Feed() {
                       </button>
                       <span className="text-sm text-zinc-400">{post.likes.length} likes</span>
                     </div>
-                    {post.caption && (
-                      <p className="text-sm mb-2">
-                        <Link to={`/profile/${post.user.id}`} className="font-semibold hover:text-neon transition-colors">
-                          {post.user.username}
-                        </Link>{' '}
+                    {showCaption && (
+                      <p className="text-sm mb-2 text-zinc-200 leading-relaxed">
                         {post.caption}
                       </p>
                     )}

@@ -17,11 +17,6 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm text-xs font-mono text-neon reveal-on-scroll">
-          <span className="w-2 h-2 rounded-full bg-neon animate-pulse"></span>
-          E-COMMERCE × SOCIAL MEDIA
-        </div>
-        
         <h1 className="font-display font-semibold text-5xl md:text-7xl lg:text-8xl tracking-tighter leading-[0.95] text-white reveal-on-scroll delay-100">
           Shop. Share. <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-600">Connect.</span>

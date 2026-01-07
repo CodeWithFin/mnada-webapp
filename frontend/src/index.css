@@ -41,21 +41,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #C0FF00;
+  background: #FF8C00;
 }
 
 /* Neon Glow Utility */
 .neon-glow {
-  box-shadow: 0 0 20px rgba(192, 255, 0, 0.15);
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
 }
 
 .neon-border-hover:hover {
-  border-color: #C0FF00;
-  box-shadow: 0 0 15px rgba(192, 255, 0, 0.1);
+  border-color: #FF8C00;
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.1);
 }
 
 /* Selection */
 ::selection {
-  background-color: #C0FF00;
+  background-color: #FF8C00;
   color: #000;
 }
