@@ -9,6 +9,10 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: 'Server misconfiguration: JWT_SECRET is not set' });
+    }
+
     const { email, username, password, firstName, lastName } = req.body;
 
     if (!email || !username || !password) {
@@ -68,9 +72,16 @@ router.post('/register', async (req, res) => {
       token,
       user: userWithAdmin
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register error:', error);
-    res.status(500).json({ message: 'Server error' });
+    const message = error?.message || 'Server error';
+    if (message.includes('reach database') || message.includes('P1001')) {
+      return res.status(503).json({ message: 'Database unavailable. Check Supabase connection and that the project is not paused.' });
+    }
+    if (message.includes('does not exist') || message.includes('P2021')) {
+      return res.status(503).json({ message: 'Database tables missing. Run the SQL in server/prisma/supabase-init.sql in Supabase SQL Editor.' });
+    }
+    res.status(500).json({ message });
   }
 });
 

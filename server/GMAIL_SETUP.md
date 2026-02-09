@@ -38,11 +38,11 @@ EMAIL_PASSWORD=abcdefghijklmnop
 ### Step 4: Test Again
 Run the test script:
 ```bash
-cd backend
+cd server
 node test-email.js
 ```
 
-Or restart your backend server and try requesting an OTP again.
+Or restart your server and try requesting an OTP again.
 
 ## Important Notes
 

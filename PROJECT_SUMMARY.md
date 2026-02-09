@@ -8,7 +8,7 @@ Mnada is a full-stack e-commerce and social media platform that combines shoppin
 
 ```
 mnada/
-├── backend/
+├── server/
 │   ├── src/
 │   │   ├── controllers/
 │   │   ├── middleware/
@@ -32,7 +32,7 @@ mnada/
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── frontend/
+├── client/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Navbar.tsx       # Navigation bar

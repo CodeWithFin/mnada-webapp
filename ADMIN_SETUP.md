@@ -5,10 +5,10 @@ The admin dashboard allows website owners to manage products, view orders, and a
 
 ## Making a User an Admin
 
-To make a user an admin, run this command in the backend directory:
+To make a user an admin, run this command in the server directory:
 
 ```bash
-cd backend
+cd server
 npm run make-admin user@example.com
 ```
 

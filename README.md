@@ -1,114 +1,71 @@
-# Mnada - Full-Stack E-commerce & Social Media Platform
+# Mnada – E-commerce & Social
 
-A modern full-stack application combining e-commerce functionality with social media features, built with TypeScript, React, Node.js, Express, and MongoDB.
+Monolithic full-stack app (Express API + React) with **Supabase** as the database. E-commerce (products, cart, Paystack checkout) and social features (feed, posts, follows, OTP auth).
 
-## 🚀 Features
+## Features
 
-### E-commerce
-- Product catalog with search and filtering
-- Shopping cart with persistent storage
-- Secure checkout with Stripe integration
-- Order management
-- Product detail pages with image zoom
+- **E-commerce**: Products, cart, checkout with **Paystack** (KES), orders
+- **Social**: Feed, explore, posts, likes, comments, follow, profiles
+- **Auth**: OTP (magic link) and optional password; JWT
+- **Admin**: Dashboard, products CRUD, orders (admin-only)
 
-### Social Media
-- User profiles with follow/unfollow system
-- Activity feed showing posts from followed users
-- Explore page with latest and popular posts
-- Post creation with image upload
-- Like and comment functionality
-- Locket-style full-screen image posts
+## Stack
 
-## 🛠️ Technology Stack
+- **Backend**: Node, Express, Prisma
+- **Database**: **Supabase** (PostgreSQL)
+- **Frontend**: React, Vite, Tailwind, Zustand, React Router
+- **Payments**: Paystack  
+- **Storage**: Supabase Storage (bucket)
 
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: PostgreSQL with Prisma
-- **Authentication**: JWT
-- **File Storage**: Cloudinary
-- **Payment**: Stripe
-- **Language**: TypeScript
+## Setup
 
-### Frontend
-- **Framework**: React with Hooks
-- **Styling**: Tailwind CSS
-- **State Management**: Zustand
-- **Routing**: React Router
-- **HTTP Client**: Axios
-- **Language**: TypeScript
+### 1. Supabase database
 
-## 📦 Installation
+Create a project at [Supabase](https://supabase.com), run the SQL in **SUPABASE_SETUP.md**, and set `DATABASE_URL` (Session pooler). See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** for the full steps.
 
-### Backend Setup
+### 2. Install and env
 
-1. Navigate to the backend directory:
+From the **project root**:
+
 ```bash
-cd backend
+npm run install:all
 ```
 
-2. Install dependencies:
+Copy env and set at least `DATABASE_URL` (and other required vars):
+
 ```bash
-npm install
+cp .env.example .env
+# Edit .env: DATABASE_URL (Supabase), JWT_SECRET, PAYSTACK_SECRET_KEY, email, etc.
 ```
 
-3. Create a `.env` file in the backend directory:
-```env
-PORT=5000
-DATABASE_URL=postgresql://user:password@localhost:5432/mnada
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRE=7d
-CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-CLOUDINARY_API_KEY=your-cloudinary-api-key
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
-STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
-FRONTEND_URL=http://localhost:5173
+You can keep using `server/.env` instead of root `.env` if you run the server from `server/`.
 
-# Email Configuration (for OTP/passwordless auth)
-EMAIL_SERVICE=gmail
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
-EMAIL_FROM=your-email@gmail.com
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-```
+### 3. Database tables and Prisma
 
-4. Set up the database:
+In Supabase: run **`server/prisma/supabase-init.sql`** in the SQL Editor (see SUPABASE_SETUP.md). Then from the project root:
+
 ```bash
-# Generate Prisma Client
 npm run prisma:generate
-
-# Run migrations
-npm run prisma:migrate
+npm run seed
+npm run seed:posts
 ```
 
-5. Start the development server:
+### 4. Run
+
+**Development** (API on :5000, frontend on :5173 with proxy to API):
+
 ```bash
 npm run dev
 ```
 
-### Frontend Setup
+**Production** (single port – API + static client):
 
-1. Navigate to the frontend directory:
 ```bash
-cd frontend
+npm run build
+NODE_ENV=production npm start
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file in the frontend directory (optional, for Stripe):
-```env
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
+Then open the URL shown (e.g. `http://localhost:5000`). In production the app is monolithic: one server serves both the React app and `/api/*`.
 
 ## 📚 API Documentation
 
@@ -152,8 +109,9 @@ npm run dev
 ### Upload
 - `POST /api/upload` - Upload image to Cloudinary
 
-### Payment
-- `POST /api/payment/create-intent` - Create Stripe payment intent
+### Payment (Paystack)
+- `POST /api/payment/initialize` - Create order and get Paystack payment link
+- `GET /api/payment/verify/:reference` - Verify payment and complete order
 
 ## 🎨 Design System
 

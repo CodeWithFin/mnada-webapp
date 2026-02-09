@@ -20,7 +20,7 @@ The application now supports passwordless authentication using a 6-digit OTP (On
 Run the Prisma migration to add the OTP table:
 
 ```bash
-cd backend
+cd server
 npm run prisma:migrate
 ```
 
@@ -104,8 +104,8 @@ In development (`NODE_ENV=development`), the OTP code is logged to the console a
 
 ## Testing
 
-1. Start the backend server
-2. Visit the frontend login page
+1. Start the server (e.g. `npm run dev` from root)
+2. Visit the client login page
 3. Enter your email
 4. Check your email for the 6-digit code (or check console in dev mode)
 5. Enter the code on the verification page

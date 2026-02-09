@@ -12,13 +12,11 @@ import Feed from './pages/Feed'
 import Explore from './pages/Explore'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
-import LoginPassword from './pages/LoginPassword'
 import Register from './pages/Register'
-import RegisterPassword from './pages/RegisterPassword'
-import VerifyOTP from './pages/VerifyOTP'
 import CompleteProfile from './pages/CompleteProfile'
 import PostDetail from './pages/PostDetail'
 import AdminDashboard from './pages/AdminDashboard'
+import PaymentVerify from './pages/PaymentVerify'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -85,13 +83,11 @@ function App() {
           <Route path="/profile/:userId" element={<Profile />} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/payment/verify" element={<ProtectedRoute><PaymentVerify /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-          <Route path="/login-password" element={user ? <Navigate to="/" /> : <LoginPassword />} />
-          <Route path="/verify-otp" element={user ? <Navigate to="/" /> : <VerifyOTP />} />
-          <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
-          <Route path="/register-password" element={user ? <Navigate to="/" /> : <RegisterPassword />} />
+          <Route path="/login" element={user ? <Navigate to="/products" /> : <Login />} />
+          <Route path="/register" element={user ? <Navigate to="/products" /> : <Register />} />
           <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         </Routes>

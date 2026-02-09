@@ -11,9 +11,9 @@ This guide will help you set up and run the Mnada project locally.
 
 ## Backend Setup
 
-1. Navigate to the backend directory:
+1. Navigate to the server directory:
 ```bash
-cd backend
+cd server
 ```
 
 2. Install dependencies:
@@ -21,15 +21,15 @@ cd backend
 npm install
 ```
 
-3. Create a `.env` file in the backend directory:
+3. Create a `.env` file in the server directory:
 ```env
 PORT=5000
 DATABASE_URL=postgresql://user:password@localhost:5432/mnada
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRE=7d
-CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-CLOUDINARY_API_KEY=your-cloudinary-api-key
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
 FRONTEND_URL=http://localhost:5173
 ```
@@ -48,13 +48,13 @@ npm run prisma:migrate
 npm run dev
 ```
 
-The backend will run on `http://localhost:5000`
+The API will run on `http://localhost:5000`
 
 ## Frontend Setup
 
-1. Navigate to the frontend directory:
+1. Navigate to the client directory:
 ```bash
-cd frontend
+cd client
 ```
 
 2. Install dependencies:
@@ -62,7 +62,7 @@ cd frontend
 npm install
 ```
 
-3. Create a `.env` file in the frontend directory (optional, for Stripe):
+3. Create a `.env` file in the client directory (optional, for Stripe):
 ```env
 VITE_API_URL=http://localhost:5000/api
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
@@ -73,7 +73,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
 npm run dev
 ```
 
-The frontend will run on `http://localhost:5173`
+The client will run on `http://localhost:5173`
 
 ## Features
 
@@ -163,7 +163,7 @@ The application uses a dark theme with neon green accents:
 - Check that the image file size is under 10MB
 
 ### Payment Issues
-- Ensure Stripe keys are correctly set in both backend and frontend `.env` files
+- Ensure Stripe keys are correctly set in both server and client `.env` files
 - Use test keys for development
 
 ## License

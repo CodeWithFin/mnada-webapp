@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/cartStore'
 import api from '../utils/api'
-import { formatPriceKSH, convertToKSH } from '../utils/price'
+import { formatPriceKSH } from '../utils/price'
 
 export default function Checkout() {
-  const { items, getTotal, clearCart, fetchCart } = useCartStore()
+  const { items, getTotal, fetchCart } = useCartStore()
   const navigate = useNavigate()
   const [shippingAddress, setShippingAddress] = useState({
     name: '',
@@ -15,11 +15,9 @@ export default function Checkout() {
     zip: '',
     country: ''
   })
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'waiting' | 'success' | 'failed'>('idle')
-  const [orderId, setOrderId] = useState<string | null>(null)
-  const [checkoutRequestID, setCheckoutRequestID] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchCart()
@@ -28,73 +26,10 @@ export default function Checkout() {
     }
   }, [fetchCart, items.length, navigate])
 
-  // Poll for payment status
-  useEffect(() => {
-    if (!checkoutRequestID || paymentStatus !== 'waiting') {
-      return
-    }
-
-    let pollInterval: NodeJS.Timeout | null = null
-    let timeout: NodeJS.Timeout | null = null
-
-    const currentCheckoutRequestID = checkoutRequestID
-    const currentOrderId = orderId
-
-    pollInterval = setInterval(async () => {
-      try {
-        const response = await api.post('/payment/stk-query', {
-          checkoutRequestID: currentCheckoutRequestID
-        })
-
-        if (response.data.ResultCode === 0) {
-          // Payment successful
-          setPaymentStatus('success')
-          clearCart()
-          setTimeout(() => {
-            navigate(`/orders/${currentOrderId}`)
-          }, 2000)
-          if (pollInterval) {
-            clearInterval(pollInterval)
-          }
-        } else if (response.data.ResultCode && response.data.ResultCode !== 1032) {
-          // Payment failed (1032 means still processing)
-          setPaymentStatus('failed')
-          if (pollInterval) {
-            clearInterval(pollInterval)
-          }
-        }
-      } catch (error) {
-        console.error('Payment status check error:', error)
-      }
-    }, 3000) // Poll every 3 seconds
-
-    // Stop polling after 5 minutes
-    timeout = setTimeout(() => {
-      if (pollInterval) {
-        clearInterval(pollInterval)
-      }
-      setPaymentStatus((prev) => {
-        if (prev === 'waiting') {
-          return 'failed'
-        }
-        return prev
-      })
-    }, 300000) // 5 minutes
-
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval)
-      }
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-    }
-  }, [checkoutRequestID, paymentStatus, orderId, navigate, clearCart])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setPaymentStatus('processing')
+    setError('')
 
     try {
       const orderItems = items.map(item => ({
@@ -102,36 +37,20 @@ export default function Checkout() {
         quantity: item.quantity
       }))
 
-      // Step 1: Create order
-      const orderResponse = await api.post('/orders', {
+      const response = await api.post('/payment/initialize', {
         items: orderItems,
-        shippingAddress
+        shippingAddress,
+        email
       })
 
-      const order = orderResponse.data
-      setOrderId(order.id)
-
-      // Step 2: Convert total to KSH and initiate STK push
-      const totalKSH = convertToKSH(getTotal())
-
-      const stkResponse = await api.post('/payment/stk-push', {
-        phoneNumber,
-        amount: totalKSH,
-        orderId: order.id
-      })
-
-      if (stkResponse.data.responseCode === 0) {
-        setCheckoutRequestID(stkResponse.data.checkoutRequestID)
-        setPaymentStatus('waiting')
-        // Show message to user
-        alert(stkResponse.data.customerMessage || 'Please check your phone and enter your M-Pesa PIN to complete the payment.')
+      const { authorizationUrl } = response.data
+      if (authorizationUrl) {
+        window.location.href = authorizationUrl
       } else {
-        setPaymentStatus('failed')
-        alert('Failed to initiate payment. Please try again.')
+        setError('Could not start payment. Please try again.')
       }
-    } catch (error: any) {
-      setPaymentStatus('failed')
-      alert(error.response?.data?.message || 'Checkout failed')
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Checkout failed')
     } finally {
       setLoading(false)
     }
@@ -145,7 +64,7 @@ export default function Checkout() {
         <div className="grid md:grid-cols-2 gap-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-            
+
             <div>
               <label className="block text-sm font-medium mb-2">Full Name</label>
               <input
@@ -215,47 +134,32 @@ export default function Checkout() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">M-Pesa Phone Number</label>
+              <label className="block text-sm font-medium mb-2">Email (for payment receipt)</label>
               <input
-                type="tel"
+                type="email"
                 required
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="e.g., 0712345678 or 254712345678"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
               />
               <p className="text-xs text-zinc-500 mt-1">
-                Enter your M-Pesa registered phone number
+                Paystack will send your receipt to this email
               </p>
             </div>
 
-            {paymentStatus === 'waiting' && (
-              <div className="bg-blue-950/30 border border-blue-900/30 p-4 rounded-lg">
-                <p className="text-blue-400 font-semibold mb-2">Waiting for payment...</p>
-                <p className="text-sm text-zinc-400">
-                  Please check your phone and enter your M-Pesa PIN to complete the payment.
-                </p>
-              </div>
-            )}
-
-            {paymentStatus === 'success' && (
-              <div className="bg-green-950/30 border border-green-900/30 p-4 rounded-lg">
-                <p className="text-green-400 font-semibold">Payment successful! Redirecting...</p>
-              </div>
-            )}
-
-            {paymentStatus === 'failed' && (
+            {error && (
               <div className="bg-red-950/30 border border-red-900/30 p-4 rounded-lg">
-                <p className="text-red-400 font-semibold">Payment failed. Please try again.</p>
+                <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading || paymentStatus === 'waiting' || paymentStatus === 'success'}
+              disabled={loading}
               className="w-full bg-neon text-black font-semibold py-4 rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Processing...' : paymentStatus === 'waiting' ? 'Waiting for payment...' : paymentStatus === 'success' ? 'Payment successful!' : 'Pay with M-Pesa'}
+              {loading ? 'Redirecting to Paystack...' : 'Pay with Paystack'}
             </button>
           </form>
 
