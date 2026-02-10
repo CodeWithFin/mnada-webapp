@@ -222,7 +222,7 @@ router.post('/verify', async (req, res) => {
     const token = jwt.sign(
       { id: user.id },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      { expiresIn: (process.env.JWT_EXPIRE || '7d') as string }
     );
 
     const userWithAdmin = await prisma.user.findUnique({
