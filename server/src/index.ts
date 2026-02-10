@@ -34,6 +34,23 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || (isProduction ? undefined : 'http://localhost:5173'),
   credentials: true
 }));
+
+// Security headers - Allow Google Fonts and external resources
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com data:; " +
+    "img-src 'self' data: https: http:; " +
+    "connect-src 'self' https:; " +
+    "frame-src 'self'; " +
+    "object-src 'none';"
+  );
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
