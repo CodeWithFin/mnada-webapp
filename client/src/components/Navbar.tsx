@@ -16,11 +16,11 @@ export default function Navbar() {
   }, [user, fetchCart])
 
   useEffect(() => {
-    // Initialize Lucide icons when menu opens
-    if (mobileMenuOpen && window.lucide) {
-      window.lucide.createIcons()
+    // Initialize Lucide icons when menu opens or user state changes
+    if (window.lucide) {
+      setTimeout(() => window.lucide.createIcons(), 100)
     }
-  }, [mobileMenuOpen])
+  }, [mobileMenuOpen, user])
 
   const handleLogout = () => {
     logout()
@@ -84,18 +84,34 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <button 
-          onClick={toggleMobileMenu}
-          className="md:hidden text-white p-2 hover:bg-zinc-800 rounded transition-colors"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? (
-            <i data-lucide="x" className="w-6 h-6"></i>
-          ) : (
-            <i data-lucide="menu" className="w-6 h-6"></i>
+        {/* Mobile cart and menu buttons */}
+        <div className="md:hidden flex items-center gap-2">
+          {user && (
+            <Link 
+              to="/cart" 
+              className="relative text-white p-2 hover:bg-zinc-800 rounded transition-colors"
+              aria-label="Cart"
+            >
+              <i data-lucide="shopping-cart" className="w-6 h-6"></i>
+              {getItemCount() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-neon text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {getItemCount()}
+                </span>
+              )}
+            </Link>
           )}
-        </button>
+          <button 
+            onClick={toggleMobileMenu}
+            className="text-white p-2 hover:bg-zinc-800 rounded transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <i data-lucide="x" className="w-6 h-6"></i>
+            ) : (
+              <i data-lucide="menu" className="w-6 h-6"></i>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
