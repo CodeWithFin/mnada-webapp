@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../utils/api'
 import { Post } from '../types'
-import { useAuthStore } from '../store/authStore'
 
 export default function Explore() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [type, setType] = useState<'latest' | 'popular'>('latest')
-  const { user } = useAuthStore()
 
   useEffect(() => {
     fetchPosts()
