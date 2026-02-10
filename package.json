@@ -16,6 +16,7 @@
     "prisma:studio": "npm run prisma:studio --prefix server",
     "seed": "npm run seed --prefix server",
     "seed:posts": "npm run seed:posts --prefix server",
+    "seed:products": "npm run seed:products --prefix server",
     "make-admin": "npm run make-admin --prefix server"
   },
   "devDependencies": {

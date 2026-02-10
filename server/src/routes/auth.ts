@@ -76,10 +76,10 @@ router.post('/register', async (req, res) => {
     console.error('Register error:', error);
     const message = error?.message || 'Server error';
     if (message.includes('reach database') || message.includes('P1001')) {
-      return res.status(503).json({ message: 'Database unavailable. Check Supabase connection and that the project is not paused.' });
+      return res.status(503).json({ message: 'Database unavailable. Check your Neon DB connection and DATABASE_URL.' });
     }
     if (message.includes('does not exist') || message.includes('P2021')) {
-      return res.status(503).json({ message: 'Database tables missing. Run the SQL in server/prisma/supabase-init.sql in Supabase SQL Editor.' });
+      return res.status(503).json({ message: 'Database tables missing. Run `npm run prisma:push` to create tables in your Neon database.' });
     }
     res.status(500).json({ message });
   }

@@ -1,6 +1,6 @@
 # Mnada – E-commerce & Social
 
-Monolithic full-stack app (Express API + React) with **Supabase** as the database. E-commerce (products, cart, Paystack checkout) and social features (feed, posts, follows, OTP auth).
+Monolithic full-stack app (Express API + React) with **Neon DB** as the PostgreSQL database and **local file storage**. E-commerce (products, cart, Paystack checkout) and social features (feed, posts, follows, OTP auth).
 
 ## Features
 
@@ -12,18 +12,18 @@ Monolithic full-stack app (Express API + React) with **Supabase** as the databas
 ## Stack
 
 - **Backend**: Node, Express, Prisma
-- **Database**: **Supabase** (PostgreSQL)
+- **Database**: **Neon DB** (PostgreSQL)  
 - **Frontend**: React, Vite, Tailwind, Zustand, React Router
 - **Payments**: Paystack  
-- **Storage**: Supabase Storage (bucket)
+- **Storage**: Local file system (uploads directory)
 
 ## Setup
 
-### 1. Supabase database
+### 1. Database Setup
 
-Create a project at [Supabase](https://supabase.com), run the SQL in **SUPABASE_SETUP.md**, and set `DATABASE_URL` (Session pooler). See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** for the full steps.
+Create a database at [Neon](https://neon.tech) and configure the connection. See **[NEON_SETUP.md](./NEON_SETUP.md)** for detailed steps.
 
-### 2. Install and env
+### 2. Install and configure
 
 From the **project root**:
 
@@ -31,21 +31,20 @@ From the **project root**:
 npm run install:all
 ```
 
-Copy env and set at least `DATABASE_URL` (and other required vars):
+Copy env and set required variables:
 
 ```bash
 cp .env.example .env
-# Edit .env: DATABASE_URL (Supabase), JWT_SECRET, PAYSTACK_SECRET_KEY, email, etc.
+# Edit .env: DATABASE_URL (Neon), file storage settings, JWT_SECRET, PAYSTACK_SECRET_KEY, etc.
 ```
 
-You can keep using `server/.env` instead of root `.env` if you run the server from `server/`.
+### 3. Initialize Database
 
-### 3. Database tables and Prisma
-
-In Supabase: run **`server/prisma/supabase-init.sql`** in the SQL Editor (see SUPABASE_SETUP.md). Then from the project root:
+Create database schema and seed data:
 
 ```bash
 npm run prisma:generate
+npm run prisma:push
 npm run seed
 npm run seed:posts
 ```

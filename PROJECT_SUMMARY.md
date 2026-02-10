@@ -22,8 +22,8 @@ mnada/
 │   │   │   ├── posts.ts         # Social media posts routes
 │   │   │   ├── follows.ts       # Follow/unfollow routes
 │   │   │   ├── users.ts         # User profile routes
-│   │   │   ├── upload.ts        # Image upload to Cloudinary
-│   │   │   └── payment.ts       # Stripe payment integration
+│   │   │   ├── upload.ts        # Image upload to Supabase Storage
+│   │   │   └── payment.ts       # Paystack payment integration
 │   │   ├── utils/
 │   │   │   └── prisma.ts        # Prisma client instance
 │   │   └── index.ts            # Express app entry point
@@ -43,7 +43,7 @@ mnada/
 │   │   │   ├── Products.tsx     # Product listing
 │   │   │   ├── ProductDetail.tsx
 │   │   │   ├── Cart.tsx
-│   │   │   ├── Checkout.tsx     # Stripe checkout
+│   │   │   ├── Checkout.tsx     # Paystack checkout
 │   │   │   ├── Orders.tsx
 │   │   │   ├── Feed.tsx         # Social feed
 │   │   │   ├── Explore.tsx      # Explore posts
@@ -110,7 +110,7 @@ The design system from the provided HTML has been fully implemented:
 - **State Management**: Zustand
 - **Routing**: React Router v6
 - **HTTP Client**: Axios
-- **Payment**: Stripe React components
+- **Payment**: Paystack integration
 - **Icons**: Lucide Icons
 - **Language**: TypeScript
 - **Build Tool**: Vite
@@ -120,7 +120,7 @@ The design system from the provided HTML has been fully implemented:
 ### E-commerce
 ✅ Product catalog with search and filtering
 ✅ Shopping cart with persistent storage
-✅ Secure checkout with Stripe integration
+✓ Secure checkout with Paystack integration
 ✅ Order management and history
 ✅ Product detail pages with image gallery
 
@@ -134,7 +134,7 @@ The design system from the provided HTML has been fully implemented:
 ✅ Full-screen post viewing
 
 ### Additional
-✅ Image upload to Cloudinary
+✓ Image upload to Supabase Storage
 ✅ JWT-based authentication
 ✅ Protected routes
 ✅ Responsive design
@@ -155,12 +155,11 @@ The Prisma schema includes:
 
 ## Next Steps
 
-1. Set up PostgreSQL database
-2. Configure environment variables
+1. Set up Neon DB database
+2. Configure Supabase Storage  
 3. Run database migrations
-4. Set up Cloudinary account
-5. Set up Stripe account (test mode)
-6. Install dependencies and run both servers
+4. Set up Paystack account (test mode)
+5. Install dependencies and run both servers
 
 See `SETUP.md` for detailed instructions.
 

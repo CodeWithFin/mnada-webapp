@@ -13,6 +13,7 @@ import Explore from './pages/Explore'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import VerifyOTP from './pages/VerifyOTP'
 import CompleteProfile from './pages/CompleteProfile'
 import PostDetail from './pages/PostDetail'
 import AdminDashboard from './pages/AdminDashboard'
@@ -88,6 +89,7 @@ function App() {
           <Route path="/orders/:id" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/login" element={user ? <Navigate to="/products" /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/products" /> : <Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         </Routes>

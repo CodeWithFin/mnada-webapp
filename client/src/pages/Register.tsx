@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
+import api from '../utils/api'
 
 export default function Register() {
   const [formData, setFormData] = useState({
     email: '',
     username: '',
-    password: '',
     firstName: '',
     lastName: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register } = useAuthStore()
   const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,16 +23,24 @@ export default function Register() {
     setLoading(true)
 
     try {
-      await register(
-        formData.email,
-        formData.username,
-        formData.password,
-        formData.firstName,
-        formData.lastName
-      )
-      navigate('/products')
+      // Request OTP for signup
+      await api.post('/otp/request', {
+        email: formData.email,
+        isSignup: true
+      })
+      
+      // Navigate to OTP verification with user data
+      navigate('/verify-otp', {
+        state: {
+          email: formData.email,
+          isSignup: true,
+          username: formData.username,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        }
+      })
     } catch (err: any) {
-      setError(err.message || 'Registration failed')
+      setError(err.response?.data?.message || 'Failed to send verification code')
     } finally {
       setLoading(false)
     }
@@ -45,7 +51,7 @@ export default function Register() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="font-display text-3xl font-semibold tracking-tighter">Sign Up</h2>
-          <p className="text-zinc-400 mt-2">Create your account</p>
+          <p className="text-zinc-400 mt-2">We'll send you a verification code</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-zinc-900/30 border border-zinc-800 p-8 rounded-lg">
@@ -114,27 +120,12 @@ export default function Register() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
-            />
-          </div>
-
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-neon text-black font-semibold py-3 rounded hover:bg-white transition-colors disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : 'Sign Up'}
+            {loading ? 'Sending code...' : 'Send Verification Code'}
           </button>
 
           <div className="border-t border-zinc-800 pt-4">

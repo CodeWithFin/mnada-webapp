@@ -69,9 +69,9 @@ app.get('/api/health/db', async (_req, res) => {
     res.status(503).json({
       ok: false,
       message: msg.includes('reach database') || msg.includes('P1001')
-        ? 'Cannot reach Supabase. Restore project if paused and use Session pooler URL (port 5432).'
+        ? 'Cannot reach Neon DB. Check your DATABASE_URL and ensure your Neon database is active.'
         : msg.includes('does not exist') || msg.includes('P2021')
-          ? 'Tables missing. Run server/prisma/supabase-init.sql in Supabase SQL Editor.'
+          ? 'Tables missing. Run `npm run prisma:push` to create tables in your Neon database.'
           : msg || 'Database error'
     });
   }

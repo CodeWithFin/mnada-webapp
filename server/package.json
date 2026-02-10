@@ -12,6 +12,7 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
     "seed:posts": "tsx prisma/seed-posts.ts",
+    "seed:products": "tsx prisma/seed-products.ts",
     "make-admin": "tsx scripts/make-admin.ts"
   },
   "keywords": [],
@@ -19,9 +20,9 @@
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.7.1",
-    "@supabase/supabase-js": "^2.95.3",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",

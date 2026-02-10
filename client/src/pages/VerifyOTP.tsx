@@ -9,6 +9,11 @@ export default function VerifyOTP() {
   const { verifyOTP } = useAuthStore()
   const [email, setEmail] = useState(location.state?.email || '')
   const [isSignup, setIsSignup] = useState(location.state?.isSignup || false)
+  const [signupData, setSignupData] = useState({
+    username: location.state?.username || '',
+    firstName: location.state?.firstName || '',
+    lastName: location.state?.lastName || ''
+  })
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,14 +23,16 @@ export default function VerifyOTP() {
 
   useEffect(() => {
     if (!email) {
-      navigate(isSignup ? '/register' : '/login')
+      // If no email in state, don't navigate immediately
+      // Let user enter email manually on the page
+      console.log('No email in navigation state')
       return
     }
     // Focus first input
     inputRefs.current[0]?.focus()
     // Start countdown for resend
     setCountdown(60)
-  }, [email, navigate, isSignup])
+  }, [email])
 
   useEffect(() => {
     if (countdown > 0) {
@@ -80,13 +87,23 @@ export default function VerifyOTP() {
     setLoading(true)
 
     try {
-      const result = await verifyOTP(email, otpCode)
-      // If new user and no username set, redirect to profile completion
-      if (result?.isNewUser) {
-        navigate('/complete-profile', { state: { email } })
+      let result
+      if (isSignup) {
+        // Pass signup data for new user registration
+        result = await verifyOTP(
+          email, 
+          otpCode, 
+          signupData.username,
+          signupData.firstName, 
+          signupData.lastName
+        )
       } else {
-        navigate('/products')
+        // Just verify for existing user login
+        result = await verifyOTP(email, otpCode)
       }
+      
+      // Navigate to products page after successful verification
+      navigate('/products')
     } catch (err: any) {
       setError(err.message || 'Invalid code. Please try again.')
       // Clear code on error
@@ -104,7 +121,7 @@ export default function VerifyOTP() {
     setError('')
 
     try {
-      await api.post('/otp/resend', { email })
+      await api.post('/otp/request', { email, isSignup })
       setCountdown(60)
       setCode(['', '', '', '', '', ''])
       inputRefs.current[0]?.focus()
@@ -123,8 +140,14 @@ export default function VerifyOTP() {
             {isSignup ? 'Verify Your Email' : 'Verify Code'}
           </h2>
           <p className="text-zinc-400 mt-2">
-            Enter the 6-digit code sent to<br />
-            <span className="text-neon font-mono">{email}</span>
+            {email ? (
+              <>
+                Enter the 6-digit code sent to<br />
+                <span className="text-neon font-mono">{email}</span>
+              </>
+            ) : (
+              'Enter your email and request a verification code'
+            )}
           </p>
         </div>
 
@@ -135,48 +158,79 @@ export default function VerifyOTP() {
             </div>
           )}
 
-          <div className="flex justify-center gap-2">
-            {code.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                onPaste={index === 0 ? handlePaste : undefined}
-                className="w-12 h-14 text-center text-2xl font-mono bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
-              />
-            ))}
-          </div>
+          {!email && (
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-2">
+                Email
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
+                  placeholder="Enter your email"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleResend()}
+                  disabled={!email}
+                  className="px-4 py-3 bg-neon text-black font-semibold rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Send Code
+                </button>
+              </div>
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading || code.join('').length !== 6}
-            className="w-full bg-neon text-black font-semibold py-3 rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Verifying...' : 'Verify Code'}
-          </button>
+          {email && (
+            <>
+              <div className="flex justify-center gap-2">
+                {code.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : undefined}
+                    className="w-12 h-14 text-center text-2xl font-mono bg-zinc-900 border border-zinc-800 rounded focus:outline-none focus:border-neon transition-colors"
+                  />
+                ))}
+              </div>
 
-          <div className="text-center space-y-2">
-            <p className="text-sm text-zinc-400">
-              Didn't receive the code?
-            </p>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={countdown > 0 || resendLoading}
-              className="text-neon hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {resendLoading
-                ? 'Sending...'
-                : countdown > 0
-                ? `Resend in ${countdown}s`
-                : 'Resend Code'}
-            </button>
-          </div>
+              <button
+                type="submit"
+                disabled={loading || code.join('').length !== 6}
+                className="w-full bg-neon text-black font-semibold py-3 rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Verifying...' : 'Verify Code'}
+              </button>
+
+              <div className="text-center space-y-2">
+                <p className="text-sm text-zinc-400">
+                  Didn't receive the code?
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={countdown > 0 || resendLoading}
+                  className="text-neon hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resendLoading
+                    ? 'Sending...'
+                    : countdown > 0
+                    ? `Resend in ${countdown}s`
+                    : 'Resend Code'}
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="border-t border-zinc-800 pt-4">
             <Link

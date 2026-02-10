@@ -46,12 +46,12 @@ export const sendOTPEmail = async (email: string, code: string) => {
       subject: 'Your Mnada Login Code',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #000; color: #fff;">
-          <h1 style="color: #C0FF00; margin-bottom: 20px;">Your Login Code</h1>
+          <h1 style="color: #FF8C00; margin-bottom: 20px;">Your Login Code</h1>
           <p style="font-size: 16px; line-height: 1.6; color: #e5e5e5;">
             Use this code to complete your login:
           </p>
-          <div style="background-color: #0A0A0A; border: 2px solid #C0FF00; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-            <h2 style="color: #C0FF00; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">
+          <div style="background-color: #0A0A0A; border: 2px solid #FF8C00; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+            <h2 style="color: #FF8C00; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">
               ${code}
             </h2>
           </div>
