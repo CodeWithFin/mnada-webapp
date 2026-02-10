@@ -25,26 +25,6 @@ export default function Explore() {
     }
   }
 
-  const handleLike = async (postId: string) => {
-    if (!user) return
-    try {
-      const response = await api.put(`/posts/${postId}/like`)
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          const isLiked = post.likes.some(like => like.userId === user.id)
-          return {
-            ...post,
-            likes: response.data.liked
-              ? [...post.likes, { id: '', postId, userId: user.id, createdAt: new Date().toISOString() }]
-              : post.likes.filter(like => like.userId !== user.id)
-          }
-        }
-        return post
-      }))
-    } catch (error) {
-      console.error('Failed to like post:', error)
-    }
-  }
 
   if (loading) {
     return (
@@ -76,9 +56,7 @@ export default function Explore() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {posts.map(post => {
-            const isLiked = user && post.likes.some(like => like.userId === user.id)
-            return (
+          {posts.map(post => (
               <div key={post.id} className="group relative aspect-square bg-zinc-900 rounded-lg overflow-hidden">
                 <Link to={`/post/${post.id}`}>
                   <img src={post.image} alt={post.caption || 'Post'} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -96,8 +74,7 @@ export default function Explore() {
                   </div>
                 </Link>
               </div>
-            )
-          })}
+          ))}
         </div>
       </div>
     </div>

@@ -8,8 +8,8 @@ export default function VerifyOTP() {
   const navigate = useNavigate()
   const { verifyOTP } = useAuthStore()
   const [email, setEmail] = useState(location.state?.email || '')
-  const [isSignup, setIsSignup] = useState(location.state?.isSignup || false)
-  const [signupData, setSignupData] = useState({
+  const [isSignup] = useState(location.state?.isSignup || false)
+  const [signupData] = useState({
     username: location.state?.username || '',
     firstName: location.state?.firstName || '',
     lastName: location.state?.lastName || ''
@@ -87,10 +87,9 @@ export default function VerifyOTP() {
     setLoading(true)
 
     try {
-      let result
       if (isSignup) {
         // Pass signup data for new user registration
-        result = await verifyOTP(
+        await verifyOTP(
           email, 
           otpCode, 
           signupData.username,
@@ -99,7 +98,7 @@ export default function VerifyOTP() {
         )
       } else {
         // Just verify for existing user login
-        result = await verifyOTP(email, otpCode)
+        await verifyOTP(email, otpCode)
       }
       
       // Navigate to products page after successful verification

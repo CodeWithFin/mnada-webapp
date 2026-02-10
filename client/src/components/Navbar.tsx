@@ -18,7 +18,7 @@ export default function Navbar() {
   useEffect(() => {
     // Initialize Lucide icons when menu opens or user state changes
     if (window.lucide) {
-      setTimeout(() => window.lucide.createIcons(), 100)
+      setTimeout(() => window.lucide?.createIcons(), 100)
     }
   }, [mobileMenuOpen, user])
 

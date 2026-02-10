@@ -31,7 +31,6 @@ export default function Feed() {
       const response = await api.put(`/posts/${postId}/like`)
       setPosts(posts.map(post => {
         if (post.id === postId) {
-          const isLiked = post.likes.some(like => like.userId === user?.id)
           return {
             ...post,
             likes: response.data.liked

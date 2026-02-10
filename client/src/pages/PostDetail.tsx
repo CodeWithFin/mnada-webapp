@@ -30,7 +30,6 @@ export default function PostDetail() {
     if (!user || !post) return
     try {
       const response = await api.put(`/posts/${post.id}/like`)
-      const isLiked = post.likes.some(like => like.userId === user.id)
       setPost({
         ...post,
         likes: response.data.liked

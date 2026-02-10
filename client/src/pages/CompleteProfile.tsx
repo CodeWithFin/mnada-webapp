@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import api from '../utils/api'
 
 export default function CompleteProfile() {
-  const location = useLocation()
   const navigate = useNavigate()
   const { user, updateProfile } = useAuthStore()
   const [formData, setFormData] = useState({

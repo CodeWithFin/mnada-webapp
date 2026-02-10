@@ -14,7 +14,7 @@ interface AuthState {
   updateProfile: (data: Partial<User>) => Promise<void>
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: localStorage.getItem('token'),
   loading: false,

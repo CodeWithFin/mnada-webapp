@@ -5,7 +5,7 @@ import api from '../utils/api'
 
 export default function ProfileEdit() {
   const navigate = useNavigate()
-  const { user, updateUser } = useAuthStore()
+  const { user, updateProfile } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
@@ -33,7 +33,7 @@ export default function ProfileEdit() {
 
     try {
       const response = await api.put(`/users/${user?.id}`, formData)
-      updateUser(response.data)
+      await updateProfile(response.data)
       navigate(`/profile/${user?.id}`)
     } catch (error: any) {
       console.error('Failed to update profile:', error)
