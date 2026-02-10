@@ -92,7 +92,15 @@ if (isProduction) {
   }
 }
 
-app.listen(PORT, () => {
-  console.log(`🚀 Mnada running on port ${PORT}${isProduction ? ' (monolithic)' : ''}`);
-});
+// For Vercel serverless
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  // Local development
+  app.listen(PORT, () => {
+    console.log(`🚀 Mnada running on port ${PORT}${isProduction ? ' (monolithic)' : ''}`);
+  });
+}
+
+export default app;
 
