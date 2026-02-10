@@ -18,6 +18,7 @@ import CompleteProfile from './pages/CompleteProfile'
 import PostDetail from './pages/PostDetail'
 import AdminDashboard from './pages/AdminDashboard'
 import PaymentVerify from './pages/PaymentVerify'
+import ProfileEdit from './pages/ProfileEdit'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
           <Route path="/explore" element={<Explore />} />
           <Route path="/post/:id" element={<PostDetail />} />
           <Route path="/profile/:userId" element={<Profile />} />
+          <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/payment/verify" element={<ProtectedRoute><PaymentVerify /></ProtectedRoute>} />
