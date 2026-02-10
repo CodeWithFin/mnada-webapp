@@ -219,10 +219,11 @@ router.post('/verify', async (req, res) => {
     }
 
     // Generate JWT token
-    const jwtExpire: string = process.env.JWT_EXPIRE || '7d';
+    const jwtSecret = process.env.JWT_SECRET!;
+    const jwtExpire = process.env.JWT_EXPIRE || '7d';
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: jwtExpire }
     );
 
