@@ -50,8 +50,9 @@ router.post('/register', async (req, res) => {
       }
     });
 
+    const jwtExpire: string = process.env.JWT_EXPIRE || '7d';
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: (process.env.JWT_EXPIRE || '7d') as string
+      expiresIn: jwtExpire
     });
 
     const userWithAdmin = await prisma.user.findUnique({
@@ -113,8 +114,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    const jwtExpire: string = process.env.JWT_EXPIRE || '7d';
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: (process.env.JWT_EXPIRE || '7d') as string
+      expiresIn: jwtExpire
     });
 
     const userWithAdmin = await prisma.user.findUnique({
