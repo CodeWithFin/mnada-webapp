@@ -1,6 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../utils/prisma';
 import { protect, AuthRequest } from '../middleware/auth';
 
@@ -53,7 +53,7 @@ router.post('/register', async (req, res) => {
     const jwtSecret = process.env.JWT_SECRET!;
     const jwtExpire = process.env.JWT_EXPIRE || '7d';
     const token = jwt.sign({ id: user.id }, jwtSecret, {
-      expiresIn: jwtExpire
+      expiresIn: jwtExpire as any
     });
 
     const userWithAdmin = await prisma.user.findUnique({
@@ -118,7 +118,7 @@ router.post('/login', async (req, res) => {
     const jwtSecret = process.env.JWT_SECRET!;
     const jwtExpire = process.env.JWT_EXPIRE || '7d';
     const token = jwt.sign({ id: user.id }, jwtSecret, {
-      expiresIn: jwtExpire
+      expiresIn: jwtExpire as any
     });
 
     const userWithAdmin = await prisma.user.findUnique({

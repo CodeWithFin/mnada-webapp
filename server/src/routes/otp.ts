@@ -1,7 +1,7 @@
 import express from 'express';
 import prisma from '../utils/prisma';
 import { sendOTPEmail } from '../utils/email';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -224,7 +224,9 @@ router.post('/verify', async (req, res) => {
     const token = jwt.sign(
       { id: user.id },
       jwtSecret,
-      { expiresIn: jwtExpire }
+      {
+        expiresIn: jwtExpire as any
+      }
     );
 
     const userWithAdmin = await prisma.user.findUnique({
