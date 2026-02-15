@@ -77,27 +77,23 @@ router.post('/request', async (req, res) => {
       }
     });
 
-    // Send OTP via email (optional - won't fail if email is not configured)
     let emailSent = false;
     try {
-      console.log(`Attempting to send OTP ${code} to ${email}...`);
       await sendOTPEmail(email, code);
       emailSent = true;
-      console.log('✅ Email sent successfully!');
     } catch (emailError: any) {
-      console.error('❌ Email sending failed:', emailError.message);
-      console.error('Email error details:', {
-        code: emailError.code,
-        command: emailError.command,
-        response: emailError.response
+      console.error('❌ OTP email failed:', emailError.message);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 DEV MODE: OTP code is:', code);
+      }
+      return res.status(503).json({
+        message: 'Could not send OTP email. Check your inbox and spam, or try again.',
+        code: 'EMAIL_FAILED',
       });
-      // In development, always log the OTP
-      console.log('📧 DEV MODE: OTP code is:', code);
-      // Continue even if email fails
     }
 
     res.json({
-      message: emailSent ? 'OTP sent to your email' : 'OTP generated (email not configured)',
+      message: 'OTP sent to your email',
       // In development, always include the OTP for testing
       ...(process.env.NODE_ENV === 'development' && { devOTP: code })
     });
