@@ -1,9 +1,12 @@
+"use client";
+
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { use } from "react";
 
 // Mock database fetch for the demonstration
 const getProductById = (id: string) => {
@@ -22,8 +25,8 @@ const getProductById = (id: string) => {
   };
 };
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const product = getProductById(id);
 
   return (
