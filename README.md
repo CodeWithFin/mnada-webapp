@@ -1,136 +1,36 @@
-# Mnada – E-commerce & Social
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Monolithic full-stack app (Express API + React) with **Neon DB** as the PostgreSQL database and **local file storage**. E-commerce (products, cart, Paystack checkout) and social features (feed, posts, follows, OTP auth).
+## Getting Started
 
-## Features
-
-- **E-commerce**: Products, cart, checkout with **Paystack** (KES), orders
-- **Social**: Feed, explore, posts, likes, comments, follow, profiles
-- **Auth**: OTP (magic link) and optional password; JWT
-- **Admin**: Dashboard, products CRUD, orders (admin-only)
-
-## Stack
-
-- **Backend**: Node, Express, Prisma
-- **Database**: **Neon DB** (PostgreSQL)  
-- **Frontend**: React, Vite, Tailwind, Zustand, React Router
-- **Payments**: Paystack  
-- **Storage**: Local file system (uploads directory)
-
-## Setup
-
-### 1. Database Setup
-
-Create a database at [Neon](https://neon.tech) and configure the connection. See **[NEON_SETUP.md](./NEON_SETUP.md)** for detailed steps.
-
-### 2. Install and configure
-
-From the **project root**:
-
-```bash
-npm run install:all
-```
-
-Copy env and set required variables:
-
-```bash
-cp .env.example .env
-# Edit .env: DATABASE_URL (Neon), file storage settings, JWT_SECRET, PAYSTACK_SECRET_KEY, etc.
-```
-
-### 3. Initialize Database
-
-Create database schema and seed data:
-
-```bash
-npm run prisma:generate
-npm run prisma:push
-npm run seed
-npm run seed:posts
-```
-
-### 4. Run
-
-**Development** (API on :5000, frontend on :5173 with proxy to API):
+First, run the development server:
 
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-**Production** (single port – API + static client):
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run build
-NODE_ENV=production npm start
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Then open the URL shown (e.g. `http://localhost:5000`). In production the app is monolithic: one server serves both the React app and `/api/*`.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## 📚 API Documentation
+## Learn More
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user (password-based)
-- `GET /api/auth/me` - Get current user
-- `PUT /api/auth/profile` - Update user profile
+To learn more about Next.js, take a look at the following resources:
 
-### Passwordless Authentication (OTP)
-- `POST /api/otp/request` - Request OTP code (sends email)
-- `POST /api/otp/verify` - Verify OTP code and get JWT token
-- `POST /api/otp/resend` - Resend OTP code
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Products
-- `GET /api/products` - Get all products (with search and filters)
-- `GET /api/products/:id` - Get single product
-- `POST /api/products` - Create product (Admin only)
-- `PUT /api/products/:id` - Update product (Admin only)
-- `DELETE /api/products/:id` - Delete product (Admin only)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### Orders
-- `POST /api/orders` - Create new order
-- `GET /api/orders` - Get user orders
-- `GET /api/orders/:id` - Get single order
-- `PUT /api/orders/:id/pay` - Update order payment status
+## Deploy on Vercel
 
-### Posts
-- `POST /api/posts` - Create a new post
-- `GET /api/posts/feed` - Get posts from followed users
-- `GET /api/posts/explore` - Get latest/popular posts
-- `GET /api/posts/:id` - Get single post
-- `PUT /api/posts/:id/like` - Like/unlike a post
-- `POST /api/posts/:id/comment` - Add comment to post
-- `DELETE /api/posts/:id` - Delete post
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### Follows
-- `PUT /api/follows/:userId` - Follow/unfollow a user
-- `GET /api/follows/:userId` - Get user's followers and following
-
-### Upload
-- `POST /api/upload` - Upload image to Cloudinary
-
-### Payment (Paystack)
-- `POST /api/payment/initialize` - Create order and get Paystack payment link
-- `GET /api/payment/verify/:reference` - Verify payment and complete order
-
-## 🎨 Design System
-
-The application uses a dark theme with modern animations and effects:
-- Viewport reveal animations
-- Border beam effects
-- Flashlight hover effects
-- Smooth transitions
-- Responsive grid layouts
-
-## 🔒 Security
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Protected routes
-- Input validation
-- CORS configuration
-
-## 📝 License
-
-This project is open source and available under the MIT License.
-
-# mnada-webapp
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

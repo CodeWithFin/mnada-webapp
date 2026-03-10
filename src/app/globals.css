@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-brand-text: #1c1a19;
+  --color-brand-bg: #ffffff;
+  --color-brand-tan: #a58c69;
+  --color-brand-tan-dark: #8f6f4a;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-fade-up: fadeUp 0.6s ease-out forwards;
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+:root {
+  --color-text: #1c1a19;
+  --color-bg: #ffffff;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-space-mono), monospace;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-space-mono), monospace;
+  font-weight: 300;
+}
+
+/* Utilities */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #ffffff; }
+::-webkit-scrollbar-thumb { background: #1c1a19; }
+
+.delay-100 { animation-delay: 0.1s; animation-fill-mode: forwards; }
+.delay-200 { animation-delay: 0.2s; animation-fill-mode: forwards; }
+
+.page-wrapper { overflow: hidden; }
