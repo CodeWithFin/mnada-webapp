@@ -47,9 +47,13 @@ export default function CartPage() {
             </h1>
 
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 lg:py-20 gap-8">
-                <div className="w-full max-w-[300px] md:max-w-[400px]">
-                  <Lottie animationData={emptyCartAnimation} loop={true} />
+              <div className="flex flex-col items-center justify-center py-10 lg:py-16 gap-6 w-full">
+                <div className="w-full max-w-[400px] md:max-w-[500px] aspect-square flex items-center justify-center">
+                  <Lottie 
+                    animationData={emptyCartAnimation} 
+                    loop={true}
+                    style={{ height: '100%', width: '100%' }}
+                  />
                 </div>
                 <div className="text-xl font-mono uppercase tracking-widest text-gray-400">Your cart is empty</div>
                 <Link 
