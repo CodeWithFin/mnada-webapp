@@ -12,31 +12,41 @@ const products = [
     name: "Bucking Bronco Hoodie - Washed Black",
     price: 8000.00,
     image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2080&auto=format&fit=crop",
+    category: "Men's",
     isNew: true
   },
   {
     id: "p2",
     name: "Mechanic Overshirt - Raw Indigo",
     price: 12000.00,
-    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg"
+    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg",
+    category: "Men's"
   },
   {
     id: "p3",
     name: "Wayfarer Cap - Rust Orange",
     price: 3200.00,
-    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg"
+    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg",
+    category: "Accessories"
   },
   {
     id: "p4",
     name: "Utility Tote - Olive Canvas",
     price: 8500.00,
-    image: "https://images.unsplash.com/photo-1550928431-ee0ec6db30d3?q=80&w=2070&auto=format&fit=crop"
+    image: "https://images.unsplash.com/photo-1550928431-ee0ec6db30d3?q=80&w=2070&auto=format&fit=crop",
+    category: "Women's"
   }
 ];
 
 export default function NewArrivals() {
   const { addToCart } = useCart();
   const [addingId, setAddingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"All" | "Men's" | "Women's">("All");
+
+  const filteredProducts = products.filter(product => {
+    if (activeTab === "All") return true;
+    return product.category === activeTab;
+  });
 
   const handleQuickAdd = (product: any) => {
     setAddingId(product.id);
@@ -63,13 +73,37 @@ export default function NewArrivals() {
                 New Arrivals
               </h3>
               <div className="new-arrivals_tabs flex gap-2">
-                <button className="px-5 py-2 text-sm font-mono border border-[#1c1a19] bg-[#1c1a19] text-white rounded-none transition-all hover:opacity-90" type="button">
+                <button 
+                  onClick={() => setActiveTab("All")}
+                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
+                    activeTab === "All" 
+                      ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
+                      : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
+                  }`}
+                  type="button"
+                >
                   All
                 </button>
-                <button className="px-5 py-2 text-sm font-mono border border-[#e5e5e5] text-[#1c1a19] rounded-none hover:border-[#1c1a19] transition-all bg-transparent" type="button">
+                <button 
+                  onClick={() => setActiveTab("Men's")}
+                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
+                    activeTab === "Men's" 
+                      ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
+                      : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
+                  }`}
+                  type="button"
+                >
                   Men&apos;s
                 </button>
-                <button className="px-5 py-2 text-sm font-mono border border-[#e5e5e5] text-[#1c1a19] rounded-none hover:border-[#1c1a19] transition-all bg-transparent" type="button">
+                <button 
+                  onClick={() => setActiveTab("Women's")}
+                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
+                    activeTab === "Women's" 
+                      ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
+                      : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
+                  }`}
+                  type="button"
+                >
                   Women&apos;s
                 </button>
               </div>
@@ -78,7 +112,12 @@ export default function NewArrivals() {
             {/* Slider List Wrapper */}
             <div className="new-arrivals_list flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 lg:grid lg:grid-cols-4 lg:gap-5 scrollbar-hide pt-8">
               
-              {products.map((product) => (
+              {filteredProducts.length === 0 ? (
+                <div className="col-span-4 py-20 text-center font-mono text-gray-400 uppercase tracking-widest text-sm w-full">
+                  No products found in this category.
+                </div>
+              ) : (
+                filteredProducts.map((product) => (
                 <div key={product.id} className="new-arrivals_item snap-start shrink-0 w-[85vw] sm:w-[45vw] lg:w-auto flex flex-col group min-w-0">
                   <Link href={`/product/${product.id}`} className="product_image-wrapper relative aspect-[0.8] bg-[#f8f8f8] overflow-hidden mb-0 block">
                     {product.isNew && (
@@ -112,7 +151,7 @@ export default function NewArrivals() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )))}
 
             </div>
           </div>
