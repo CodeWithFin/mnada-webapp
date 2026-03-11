@@ -40,12 +40,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         .single();
 
       if (data && !error) {
+        let galleryImages = [data.image];
+        let cleanDescription = data.description || "";
+
+        if (data.description && data.description.includes("---GALLERY_DATA---")) {
+          const parts = data.description.split("---GALLERY_DATA---");
+          cleanDescription = parts[0].trim();
+          try {
+            galleryImages = JSON.parse(parts[1]);
+          } catch (e) {
+            console.error("Error parsing gallery data:", e);
+          }
+        }
+
         setProduct({
           id: data.mock_id,
           name: data.name,
           price: Number(data.price),
-          description: data.description || "No description provided.",
-          images: [data.image], // Mapping single DB image to array format required by UI
+          description: cleanDescription || "No description provided.",
+          images: galleryImages, 
           materials: data.materials || "Premium materials.",
           fit: data.fit || "True to size.",
           sizes: data.sizes || ['S', 'M', 'L', 'XL']
@@ -141,6 +154,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         fill
                         className="object-cover transition-opacity duration-300"
                         priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                       />
                     </div>
                     
@@ -166,9 +180,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         >
                           <Image 
                             src={img}
-                            alt={`Preview ${idx + 1}`}
+                            alt={`${product.name} Preview ${idx + 1}`}
                             fill
                             className="object-cover"
+                            sizes="80px"
                           />
                         </button>
                       ))}

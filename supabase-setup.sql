@@ -18,6 +18,18 @@ DO $$ BEGIN ALTER TABLE products ADD COLUMN fit text; EXCEPTION WHEN others THEN
 DO $$ BEGIN ALTER TABLE products ADD COLUMN sizes text[] DEFAULT '{"S", "M", "L", "XL"}'; EXCEPTION WHEN others THEN null; END $$;
 DO $$ BEGIN ALTER TABLE products ADD COLUMN main_image_url text; EXCEPTION WHEN others THEN null; END $$;
 
+-- Create gallery table to support multiple images without modifying products
+CREATE TABLE IF NOT EXISTS product_gallery (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id uuid REFERENCES products(id) ON DELETE CASCADE,
+  image_url text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for gallery
+ALTER TABLE product_gallery ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to gallery" ON product_gallery FOR SELECT TO public USING (true);
+
 -- Enable RLS
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 

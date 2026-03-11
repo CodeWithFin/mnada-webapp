@@ -14,6 +14,7 @@ interface Product {
   category: string;
   is_new: boolean;
   description?: string;
+  images?: string[];
 }
 
 export default function AdminProductsPage() {
@@ -31,7 +32,8 @@ export default function AdminProductsPage() {
     description: "",
     isNew: false
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -42,7 +44,26 @@ export default function AdminProductsPage() {
       .order('created_at', { ascending: false });
       
     if (data && !error) {
-      setProducts(data);
+      const formattedProducts = data.map((p: any) => {
+        let galleryImages = [p.image];
+        let cleanDescription = p.description || "";
+
+        if (p.description && p.description.includes("---GALLERY_DATA---")) {
+          const parts = p.description.split("---GALLERY_DATA---");
+          cleanDescription = parts[0].trim();
+          try {
+            galleryImages = JSON.parse(parts[1]);
+          } catch (e) {
+            console.error("Error parsing gallery data:", e);
+          }
+        }
+        return {
+          ...p,
+          description: cleanDescription,
+          images: galleryImages
+        };
+      });
+      setProducts(formattedProducts);
     }
     setIsLoading(false);
   };
@@ -61,35 +82,47 @@ export default function AdminProductsPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setImageFiles(selectedFiles);
+      
+      // Create previews
+      const previews = selectedFiles.map(file => URL.createObjectURL(file));
+      setImagePreviews(previews);
     }
   };
 
   const handleEditClick = (product: Product) => {
     setEditingProductId(product.id);
+    let cleanDescription = product.description || "";
+    if (cleanDescription.includes("---GALLERY_DATA---")) {
+      cleanDescription = cleanDescription.split("---GALLERY_DATA---")[0].trim();
+    }
+
     setFormData({
       name: product.name,
       price: product.price.toString(),
       category: product.category,
-      description: product.description || "",
+      description: cleanDescription,
       isNew: product.is_new
     });
-    setImageFile(null); // Clear any previously selected file
+    setImageFiles([]); // Clear any previously selected file
+    setImagePreviews(product.images || [product.image]); // Show existing images as previews
     setIsModalOpen(true);
   };
 
   const resetForm = () => {
     setEditingProductId(null);
     setFormData({ name: "", price: "", category: "Men\'s", description: "", isNew: false });
-    setImageFile(null);
+    setImageFiles([]);
+    setImagePreviews([]);
     setIsModalOpen(false);
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProductId && !imageFile) {
-      alert("Please select an image for new products");
+    if (!editingProductId && imageFiles.length === 0) {
+      alert("Please select at least one image");
       return;
     }
 
@@ -101,8 +134,10 @@ export default function AdminProductsPage() {
       if (editingProductId) {
         form.append('id', editingProductId);
       }
-      if (imageFile) {
-          form.append('image', imageFile);
+      if (imageFiles.length > 0) {
+          imageFiles.forEach(file => {
+              form.append('images', file);
+          });
       }
       form.append('name', formData.name);
       form.append('price', formData.price);
@@ -191,15 +226,34 @@ export default function AdminProductsPage() {
             <form onSubmit={handleAddProduct} className="p-6 flex flex-col gap-6">
               
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Image {editingProductId ? "(Optional)" : "*"}</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-[#f0f0f0] file:text-[#1c1a19] hover:file:bg-[#e5e5e5] cursor-pointer"
-                  required={!editingProductId}
-                />
-                {editingProductId && <p className="text-[10px] text-gray-400 font-mono mt-1">Leave empty to keep current image</p>}
+                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Images {editingProductId ? "(Optional - overwrites current images)" : "*"}</label>
+                <div className="flex flex-col gap-4">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-[#f0f0f0] file:text-[#1c1a19] hover:file:bg-[#e5e5e5] cursor-pointer"
+                    required={!editingProductId}
+                  />
+                  
+                  {imagePreviews.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative w-20 h-20 border border-[#e5e5e5] bg-[#f8f8f8]">
+                          <Image 
+                            src={preview} 
+                            alt={`Preview ${index}`} 
+                            fill 
+                            className="object-cover" 
+                            sizes="64px"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {editingProductId && <p className="text-[10px] text-gray-400 font-mono mt-1">Leave empty to keep current images. Providing new images will replace ALL existing ones.</p>}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -307,7 +361,8 @@ export default function AdminProductsPage() {
                   src={product.image} 
                   alt={product.name} 
                   fill 
-                  className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
                 
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

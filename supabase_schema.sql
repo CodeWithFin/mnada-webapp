@@ -9,7 +9,8 @@ CREATE TABLE products (
     is_new BOOLEAN DEFAULT false,
     materials TEXT,
     fit TEXT,
-    main_image_url TEXT NOT NULL
+    main_image_url TEXT NOT NULL,
+    images TEXT[] DEFAULT '{}'
 );
 
 -- 2. Create Product Images Table (for galleries)
