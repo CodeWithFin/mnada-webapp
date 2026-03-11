@@ -1,6 +1,7 @@
 "use client";
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Icon } from '@iconify/react';
 
 export default function Collections() {
@@ -12,7 +13,7 @@ export default function Collections() {
             
             <div className="collections_grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 lg:gap-8 auto-rows-fr">
               {/* Large Item */}
-              <div className="collection-item_large group relative lg:col-span-6 min-h-[500px] overflow-hidden bg-[#f0f0f0]">
+              <Link href="/mens" className="collection-item_large group relative lg:col-span-6 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
                   src="https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1974&auto=format&fit=crop" 
                   alt="Mens Collection"
@@ -29,11 +30,11 @@ export default function Collections() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Stacked Items */}
               <div className="collection-item_wrapper lg:col-span-3 flex flex-col gap-5 lg:gap-8 h-full">
-                <div className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0]">
+                <Link href="/mens" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
                     src="https://images.unsplash.com/photo-1559561853-08451507cbe7?q=80&w=2003&auto=format&fit=crop" 
                     alt="Jackets"
@@ -47,8 +48,8 @@ export default function Collections() {
                         <Icon icon="lucide:chevron-right" className="text-white" width="18" />
                   </div>
                   </div>
-                </div>
-                <div className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0]">
+                </Link>
+                <Link href="#" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
                     src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" 
                     alt="Accessories"
@@ -62,11 +63,11 @@ export default function Collections() {
                           <Icon icon="lucide:chevron-right" className="text-white" width="18" />
                       </div>
                   </div>
-                </div>
+                </Link>
               </div>
 
               {/* Tall Item */}
-              <div className="collection-item_tall group relative lg:col-span-3 min-h-[500px] overflow-hidden bg-[#f0f0f0]">
+              <Link href="/womens" className="collection-item_tall group relative lg:col-span-3 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
                   src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?q=80&w=1995&auto=format&fit=crop" 
                   alt="Womens Collection"
@@ -83,7 +84,7 @@ export default function Collections() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
           </div>
