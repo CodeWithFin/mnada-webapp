@@ -8,12 +8,71 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { cartItems, subtotal } = useCart();
+  const { cartItems, subtotal, clearCart } = useCart();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Form State
+  const [formData, setFormData] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    apartment: "",
+    city: "",
+    postalCode: "",
+    phone: ""
+  });
+
   const shipping = 500; // Flat-rate shipping
   const total = subtotal + shipping;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePayNow = async () => {
+    if (!formData.email) {
+      alert("Please enter your email to receive a confirmation.");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Send confirmation email
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          orderDetails: cartItems,
+          total: total
+        }),
+      });
+
+      if (response.ok) {
+        // Success logic: Clear cart and redirect or show success
+        clearCart();
+        alert("Success! Check your email for order confirmation.");
+        router.push('/');
+      } else {
+        throw new Error("Failed to send confirmation email.");
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -72,8 +131,12 @@ export default function CheckoutPage() {
                   </div>
                   <input 
                     type="email" 
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     placeholder="Email or mobile phone number" 
                     className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                    required
                   />
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" className="w-4 h-4 accent-[#1c1a19]" />
@@ -88,24 +151,39 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <input 
                       type="text" 
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                       placeholder="First name" 
                       className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                      required
                     />
                     <input 
                       type="text" 
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                       placeholder="Last name" 
                       className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                      required
                     />
                   </div>
 
                   <input 
                     type="text" 
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
                     placeholder="Address" 
                     className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                    required
                   />
                   
                   <input 
                     type="text" 
+                    name="apartment"
+                    value={formData.apartment}
+                    onChange={handleInputChange}
                     placeholder="Apartment, suite, etc. (optional)" 
                     className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
                   />
@@ -113,20 +191,32 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <input 
                       type="text" 
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
                       placeholder="City" 
                       className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                      required
                     />
                     <input 
                       type="text" 
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
                       placeholder="Postal code" 
                       className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                      required
                     />
                   </div>
                   
                   <input 
                     type="tel" 
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
                     placeholder="Phone" 
                     className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] transition-colors"
+                    required
                   />
                 </section>
 
@@ -141,10 +231,12 @@ export default function CheckoutPage() {
 
                 <button 
                   type="button"
-                  className="w-full h-14 bg-[#1c1a19] text-white font-bold uppercase text-[11px] tracking-widest hover:bg-[#a58c69] transition-colors flex items-center justify-center mt-4 group"
+                  onClick={handlePayNow}
+                  disabled={isProcessing}
+                  className="w-full h-14 bg-[#1c1a19] text-white font-bold uppercase text-[11px] tracking-widest hover:bg-[#a58c69] transition-colors flex items-center justify-center mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Pay Now
-                  <Icon icon="lucide:lock" width="14" className="ml-2" />
+                  {isProcessing ? "Processing..." : "Pay Now"}
+                  {!isProcessing && <Icon icon="lucide:lock" width="14" className="ml-2" />}
                 </button>
 
               </div>
