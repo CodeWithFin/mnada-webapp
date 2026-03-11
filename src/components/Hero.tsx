@@ -23,7 +23,7 @@ export default function Hero() {
           <div className="container-large max-w-[1792px] mx-auto">
             <div className="hero_content max-w-xl">
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#a58c69] mb-4 opacity-0 animate-fade-up">
-                Est. 2013 • Birmingham
+                Est. 2025 • Nakuru
               </h2>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold uppercase tracking-wide leading-[1.1] text-white mb-8 opacity-0 animate-fade-up delay-100">
                 Provisions for<br/>the Wild

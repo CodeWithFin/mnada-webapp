@@ -13,7 +13,7 @@ export default function Footer() {
             <div className="footer_brand-wrapper col-span-2 lg:col-span-4">
               <Link href="#" className="text-2xl font-bold tracking-tight uppercase block mb-6">Mnada</Link>
               <p className="text-xs font-light text-gray-500 max-w-xs mb-8 leading-6">
-                Provisions for the wild. Industrial goods for the modern pioneer. Designed in the UK, worn worldwide.
+                Provisions for the wild. Industrial goods for the modern pioneer. Designed in Nakuru, worn worldwide.
               </p>
               <div className="footer_socials flex gap-4 opacity-60">
                 <Link href="#" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:instagram" width="18" /></Link>
@@ -44,7 +44,7 @@ export default function Footer() {
 
             <div className="footer_store-info col-span-2 lg:col-span-4 bg-[#f8f8f8] p-8">
               <h4 className="font-bold uppercase tracking-widest text-[10px] text-[#1c1a19] mb-3">Visit our Store</h4>
-              <p className="text-xs text-gray-500 mb-6 font-light">120 Lionel St, Birmingham B3 1JE, United Kingdom</p>
+              <p className="text-xs text-gray-500 mb-6 font-light">Nakuru, Kenya</p>
               <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-[#1c1a19] border-b border-[#1c1a19] hover:text-[#a58c69] hover:border-[#a58c69] transition-colors pb-0.5">Get Directions</Link>
             </div>
           </div>
