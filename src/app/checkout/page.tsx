@@ -45,15 +45,17 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      // Send confirmation email
+      // Send order to API for DB logging and email
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
+          customer: formData,
           orderDetails: cartItems,
+          subtotal: subtotal,
+          shipping: shipping,
           total: total
         }),
       });

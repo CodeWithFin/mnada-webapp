@@ -6,37 +6,60 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
+import { supabase } from "@/lib/supabase";
 
-// Mock database fetch for the demonstration
-const getProductById = (id: string) => {
-  return {
-    id,
-    name: "Bucking Bronco Hoodie - Washed Black",
-    price: 8000,
-    description: "A heavy-weight, premium cotton blend hoodie featuring our iconic bucking bronco graphic. Designed to withstand the elements and age beautifully with wear. Featuring a slightly oversized, relaxed fit perfect for layering on the road.",
-    images: [
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2080&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1974&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1974&auto=format&fit=crop"
-    ],
-    materials: "100% Organic Cotton. 450gsm heavyweight fleece. Made in Portugal.",
-    fit: "Relaxed fit. True to size. Model is 6'1\" and wears a size L.",
-    sizes: ['S', 'M', 'L', 'XL']
-  };
-};
+interface ProductDetails {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  images: string[];
+  materials: string;
+  fit: string;
+  sizes: string[];
+}
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const product = getProductById(id);
   const { addToCart } = useCart();
   
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>('L');
   const [isAdding, setIsAdding] = useState(false);
 
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('mock_id', id)
+        .single();
+
+      if (data && !error) {
+        setProduct({
+          id: data.mock_id,
+          name: data.name,
+          price: Number(data.price),
+          description: data.description || "No description provided.",
+          images: [data.image], // Mapping single DB image to array format required by UI
+          materials: data.materials || "Premium materials.",
+          fit: data.fit || "True to size.",
+          sizes: data.sizes || ['S', 'M', 'L', 'XL']
+        });
+      }
+      setIsLoading(false);
+    };
+
+    fetchProduct();
+  }, [id]);
+
   const handleAddToCart = () => {
+    if (!product) return;
+    
     setIsAdding(true);
     addToCart({
       id: product.id,
@@ -52,6 +75,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       setIsAdding(false);
     }, 800);
   };
+
+  if (isLoading) {
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white items-center justify-center">
+        <div className="animate-pulse font-mono text-sm uppercase tracking-widest text-gray-400">Loading Product...</div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white items-center justify-center gap-6">
+        <h2 className="text-xl font-mono uppercase tracking-widest text-[#1c1a19]">Product not found</h2>
+        <Link href="/mens" className="px-8 h-12 bg-[#1c1a19] text-white flex items-center justify-center text-xs font-bold uppercase tracking-widest hover:bg-[#a58c69] transition-colors">
+          Return to Shop
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">

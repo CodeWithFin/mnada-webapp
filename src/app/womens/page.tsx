@@ -4,35 +4,28 @@ import Footer from "@/components/Footer";
 import ProductGrid from "@/components/ProductGrid";
 import Image from "next/image";
 
-const womensProducts = [
-  {
-    id: "w1",
-    name: "Rider Leather Jacket - Vintage Brown",
-    price: 28000,
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1935&auto=format&fit=crop",
-    isNew: true
-  },
-  {
-    id: "w2",
-    name: "Desert Wanderer Boots",
-    price: 19500,
-    image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?q=80&w=1974&auto=format&fit=crop",
-  },
-  {
-    id: "w3",
-    name: "Selvedge Denim Shorts",
-    price: 6800,
-    image: "https://images.unsplash.com/photo-1591369822096-11440d4e9fd8?q=80&w=1974&auto=format&fit=crop",
-  },
-  {
-    id: "w4",
-    name: "Sunset Crop Tee",
-    price: 3500,
-    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=2070&auto=format&fit=crop",
-  }
-];
+import { supabase } from "@/lib/supabase";
 
-export default function WomensPage() {
+// Removed hardcoded womensProducts array
+export const revalidate = 60; // Revalidate cache every 60 seconds
+
+export default async function WomensPage() {
+  const { data: dbProducts, error } = await supabase
+    .from('products')
+    .select('mock_id, name, price, image, is_new')
+    .eq('category', "Women's");
+    
+  if (error) {
+    console.error('Error fetching womens products:', error);
+  }
+
+  const womensProducts = dbProducts?.map(p => ({
+    id: p.mock_id,
+    name: p.name,
+    price: Number(p.price),
+    image: p.image,
+    isNew: p.is_new
+  })) || [];
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">
       <AnnouncementBar />
