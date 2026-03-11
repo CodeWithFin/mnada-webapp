@@ -12,7 +12,11 @@ export async function POST(req: Request) {
       html: `
         <div style="font-family: monospace; padding: 20px; color: #1c1a19;">
           <h1 style="text-transform: uppercase; letter-spacing: 2px;">Order Confirmed</h1>
-          <p>Thank you for your purchase from Mnada.</p>
+          <p>Thank you for your order from Mnada.</p>
+          <p style="background-color: #f8f8f8; padding: 10px; border-left: 3px solid #a58c69;">
+            <strong>Payment Status: Pending</strong><br/>
+            We have received your order. We will follow up with you shortly to arrange for physical payment and delivery.
+          </p>
           <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;" />
           <h3 style="text-transform: uppercase;">Order Summary</h3>
           <ul style="list-style: none; padding: 0;">

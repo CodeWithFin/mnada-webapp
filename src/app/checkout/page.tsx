@@ -61,7 +61,7 @@ export default function CheckoutPage() {
       if (response.ok) {
         // Success logic: Clear cart and redirect or show success
         clearCart();
-        alert("Success! Check your email for order confirmation.");
+        alert("Success! Your order has been placed. You will pay upon delivery/pickup. Check your email for confirmation.");
         router.push('/');
       } else {
         throw new Error("Failed to send confirmation email.");
@@ -235,8 +235,8 @@ export default function CheckoutPage() {
                   disabled={isProcessing}
                   className="w-full h-14 bg-[#1c1a19] text-white font-bold uppercase text-[11px] tracking-widest hover:bg-[#a58c69] transition-colors flex items-center justify-center mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isProcessing ? "Processing..." : "Pay Now"}
-                  {!isProcessing && <Icon icon="lucide:lock" width="14" className="ml-2" />}
+                  {isProcessing ? "Processing..." : "Place Order"}
+                  {!isProcessing && <Icon icon="lucide:arrow-right" width="16" className="ml-2 group-hover:translate-x-1 transition-transform" />}
                 </button>
 
               </div>
