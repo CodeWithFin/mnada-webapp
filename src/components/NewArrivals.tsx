@@ -1,47 +1,51 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { Icon } from '@iconify/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
-const products = [
-  {
-    id: "p1",
-    name: "Bucking Bronco Hoodie - Washed Black",
-    price: 8000.00,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2080&auto=format&fit=crop",
-    category: "Men's",
-    isNew: true
-  },
-  {
-    id: "p2",
-    name: "Mechanic Overshirt - Raw Indigo",
-    price: 12000.00,
-    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4734259a-bad7-422f-981e-ce01e79184f2_1600w.jpg",
-    category: "Men's"
-  },
-  {
-    id: "p3",
-    name: "Wayfarer Cap - Rust Orange",
-    price: 3200.00,
-    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg",
-    category: "Accessories"
-  },
-  {
-    id: "p4",
-    name: "Utility Tote - Olive Canvas",
-    price: 8500.00,
-    image: "https://images.unsplash.com/photo-1550928431-ee0ec6db30d3?q=80&w=2070&auto=format&fit=crop",
-    category: "Women's"
-  }
-];
+// Product type matching the component's needs
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  isNew?: boolean;
+}
 
 export default function NewArrivals() {
   const { addToCart } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"All" | "Men's" | "Women's">("All");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('mock_id, name, price, image, category, is_new')
+        .limit(8);
+        
+      if (data && !error) {
+        setProducts(data.map(p => ({
+          id: p.mock_id,
+          name: p.name,
+          price: Number(p.price),
+          image: p.image,
+          category: p.category,
+          isNew: p.is_new
+        })));
+      }
+      setIsLoading(false);
+    };
+    
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter(product => {
     if (activeTab === "All") return true;
@@ -110,9 +114,13 @@ export default function NewArrivals() {
             </div>
 
             {/* Slider List Wrapper */}
-            <div className="new-arrivals_list flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 lg:grid lg:grid-cols-4 lg:gap-5 scrollbar-hide pt-8">
+            <div className="new-arrivals_list flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 lg:grid lg:grid-cols-4 lg:gap-5 scrollbar-hide pt-8 min-h-[300px]">
               
-              {filteredProducts.length === 0 ? (
+              {isLoading ? (
+                <div className="col-span-4 py-20 text-center font-mono text-gray-400 uppercase tracking-widest text-sm w-full animate-pulse">
+                  Loading Products...
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div className="col-span-4 py-20 text-center font-mono text-gray-400 uppercase tracking-widest text-sm w-full">
                   No products found in this category.
                 </div>

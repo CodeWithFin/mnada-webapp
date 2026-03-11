@@ -1,0 +1,104 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Icon } from "@iconify/react";
+import { usePathname } from "next/navigation";
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const auth = localStorage.getItem("mnada_admin_auth");
+    if (auth === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === "mnada2025") { // Simple MVP password
+      localStorage.setItem("mnada_admin_auth", "true");
+      setIsAuthenticated(true);
+      setError("");
+    } else {
+      setError("Incorrect password");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("mnada_admin_auth");
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#f8f8f8] flex items-center justify-center p-5">
+        <form onSubmit={handleLogin} className="bg-white p-10 max-w-sm w-full border border-[#e5e5e5] flex flex-col gap-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold uppercase tracking-widest text-[#1c1a19] mb-2">Mnada Admin</h1>
+            <p className="text-xs font-mono text-gray-500">Enter password to access dashboard</p>
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
+            autoFocus
+          />
+          {error && <p className="text-red-500 text-xs font-mono text-center">{error}</p>}
+          <button type="submit" className="h-12 bg-[#1c1a19] text-white font-bold uppercase tracking-widest text-xs hover:bg-[#a58c69] transition-colors">
+            Login
+          </button>
+          <Link href="/" className="text-center text-xs font-mono text-gray-400 hover:text-[#1c1a19] underline underline-offset-4 mt-4">
+            Return to Store
+          </Link>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f8f8f8] flex flex-col md:flex-row">
+      {/* Sidebar */}
+      <aside className="w-full md:w-64 bg-white border-r border-[#e5e5e5] flex flex-col shrink-0">
+        <div className="h-[70px] flex items-center px-8 border-b border-[#e5e5e5]">
+          <Link href="/admin" className="text-xl font-bold tracking-tight uppercase text-[#1c1a19]">
+            Mnada Admin
+          </Link>
+        </div>
+        <div className="flex flex-col py-6 gap-2">
+          <Link 
+            href="/admin" 
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === '/admin' ? 'text-[#a58c69] font-bold bg-[#f8f8f8]' : 'text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]'}`}
+          >
+            <Icon icon="lucide:shopping-bag" width="18" /> Orders
+          </Link>
+          <Link 
+            href="/admin/products" 
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === '/admin/products' ? 'text-[#a58c69] font-bold bg-[#f8f8f8]' : 'text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]'}`}
+          >
+            <Icon icon="lucide:package" width="18" /> Products
+          </Link>
+        </div>
+        <div className="mt-auto border-t border-[#e5e5e5] p-6">
+          <button onClick={handleLogout} className="flex items-center gap-3 text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors w-full">
+            <Icon icon="lucide:log-out" width="18" /> Logout
+          </button>
+          <Link href="/" className="mt-6 flex items-center gap-3 text-xs font-mono text-gray-400 hover:text-[#1c1a19] transition-colors">
+            <Icon icon="lucide:external-link" width="14" /> View Storefront
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 md:p-12 overflow-y-auto w-full">
+        {children}
+      </main>
+    </div>
+  );
+}
