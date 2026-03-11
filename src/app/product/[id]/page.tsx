@@ -7,10 +7,10 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { use, useState } from "react";
+import { useCart } from "@/context/CartContext";
 
 // Mock database fetch for the demonstration
 const getProductById = (id: string) => {
-  // Return some default placeholder data for the sake of the static demo design
   return {
     id,
     name: "Bucking Bronco Hoodie - Washed Black",
@@ -23,13 +23,35 @@ const getProductById = (id: string) => {
     ],
     materials: "100% Organic Cotton. 450gsm heavyweight fleece. Made in Portugal.",
     fit: "Relaxed fit. True to size. Model is 6'1\" and wears a size L.",
+    sizes: ['S', 'M', 'L', 'XL']
   };
 };
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const product = getProductById(id);
+  const { addToCart } = useCart();
+  
   const [activeImage, setActiveImage] = useState(0);
+  const [selectedSize, setSelectedSize] = useState<string>('L');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToCart = () => {
+    setIsAdding(true);
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      quantity: 1,
+      size: selectedSize
+    });
+    
+    // Reset loading state after a brief delay
+    setTimeout(() => {
+      setIsAdding(false);
+    }, 800);
+  };
 
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">
@@ -132,8 +154,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <button className="underline decoration-1 underline-offset-4 text-[#a58c69]">Size Guide</button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {['S', 'M', 'L', 'XL'].map((size) => (
-                      <button key={size} className="h-12 border border-[#e5e5e5] flex items-center justify-center text-sm font-mono hover:border-[#1c1a19] transition-colors bg-white hover:bg-[#fafafa]">
+                    {product.sizes.map((size) => (
+                      <button 
+                        key={size} 
+                        onClick={() => setSelectedSize(size)}
+                        className={`h-12 border flex items-center justify-center text-sm font-mono transition-colors ${selectedSize === size ? 'border-[#1c1a19] bg-[#1c1a19] text-white' : 'border-[#e5e5e5] bg-white hover:border-[#1c1a19] hover:bg-[#fafafa]'}`}
+                      >
                         {size}
                       </button>
                     ))}
@@ -141,9 +167,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
 
                 {/* Add to Cart */}
-                <button className="w-full h-14 bg-[#1c1a19] text-white font-bold uppercase text-[11px] tracking-widest hover:bg-[#a58c69] transition-colors flex items-center justify-center gap-3">
-                  <Icon icon="lucide:shopping-bag" width="16" />
-                  Add to Cart
+                <button 
+                  onClick={handleAddToCart}
+                  disabled={isAdding}
+                  className={`w-full h-14 font-bold uppercase text-[11px] tracking-widest transition-colors flex items-center justify-center gap-3 ${isAdding ? 'bg-[#a58c69] text-white cursor-default' : 'bg-[#1c1a19] text-white hover:bg-[#a58c69]'}`}
+                >
+                  <Icon icon={isAdding ? "lucide:check" : "lucide:shopping-bag"} width={16} className={isAdding ? "animate-in zoom-in duration-300" : ""} />
+                  {isAdding ? "Added to Cart" : "Add to Cart"}
                 </button>
 
                 {/* Product Info Accordions */}

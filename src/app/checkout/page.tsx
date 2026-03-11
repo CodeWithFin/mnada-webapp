@@ -6,31 +6,38 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
-
-// Mock cart items based on ProductPage structure
-const cartItems = [
-  {
-    id: "p1",
-    name: "Bucking Bronco Hoodie - Washed Black",
-    price: 8000,
-    size: "L",
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2080&auto=format&fit=crop"
-  },
-  {
-    id: "p2",
-    name: "Wayfarer Cap - Rust Orange",
-    price: 3200,
-    size: "One Size",
-    quantity: 1,
-    image: "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c543a9e1-f226-4ced-80b0-feb8445a75b9_1600w.jpg"
-  }
-];
+import { useCart } from "@/context/CartContext";
+import { useState, useEffect } from "react";
 
 export default function CheckoutPage() {
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const { cartItems, subtotal } = useCart();
+  const [mounted, setMounted] = useState(false);
   const shipping = 500; // Flat-rate shipping
   const total = subtotal + shipping;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white items-center justify-center">
+        <div className="animate-pulse font-mono text-sm uppercase tracking-widest text-gray-400">Loading Checkout...</div>
+      </div>
+    );
+  }
+
+  // Redirect if cart is empty (optional, but good practice)
+  if (cartItems.length === 0) {
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white items-center justify-center gap-6">
+        <h2 className="text-xl font-mono uppercase tracking-widest text-gray-400">Your cart is empty</h2>
+        <Link href="/mens" className="px-8 h-12 bg-[#1c1a19] text-white flex items-center justify-center text-xs font-bold uppercase tracking-widest hover:bg-[#a58c69] transition-colors">
+          Return to Shop
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">
@@ -150,7 +157,7 @@ export default function CheckoutPage() {
 
                 <div className="flex flex-col gap-6">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="flex gap-4 items-center">
+                    <div key={`${item.id}-${item.size}`} className="flex gap-4 items-center">
                       <div className="relative w-16 aspect-[0.8] bg-white border border-[#e5e5e5] shrink-0">
                         <Image src={item.image} alt={item.name} fill className="object-cover" />
                         <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-mono">

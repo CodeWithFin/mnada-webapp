@@ -3,9 +3,16 @@
 import Link from 'next/link';
 import { Icon } from '@iconify/react';
 import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { totalItems } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Prevent background scrolling when mobile menu is open
   useEffect(() => {
@@ -56,7 +63,11 @@ export default function Navbar() {
               </button>
               <Link href="/cart" className="nav_cart text-[#1c1a19] hover:text-[#a58c69] transition-colors relative">
                 <Icon icon="lucide:shopping-bag" width="18" strokeWidth="1.5" />
-                <span className="absolute -top-1.5 -right-1.5 bg-[#a58c69] text-white text-[9px] w-3.5 h-3.5 flex items-center justify-center rounded-full">2</span>
+                {mounted && totalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#a58c69] text-white text-[9px] w-3.5 h-3.5 flex items-center justify-center rounded-full animate-in zoom-in duration-300">
+                    {totalItems}
+                  </span>
+                )}
               </Link>
             </div>
           </div>

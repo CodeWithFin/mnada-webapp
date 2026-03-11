@@ -22,6 +22,8 @@ export const viewport: Viewport = {
 };
 
 
+import { CartProvider } from "@/context/CartContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +32,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${spaceMono.variable} antialiased selection:bg-[#a58c69] selection:text-white font-[family-name:var(--font-space-mono)]`}>
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
       </body>
     </html>
   );
