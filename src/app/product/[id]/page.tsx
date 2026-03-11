@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 
 // Mock database fetch for the demonstration
 const getProductById = (id: string) => {
@@ -18,7 +18,8 @@ const getProductById = (id: string) => {
     description: "A heavy-weight, premium cotton blend hoodie featuring our iconic bucking bronco graphic. Designed to withstand the elements and age beautifully with wear. Featuring a slightly oversized, relaxed fit perfect for layering on the road.",
     images: [
       "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2080&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1974&auto=format&fit=crop"
+      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1974&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1974&auto=format&fit=crop"
     ],
     materials: "100% Organic Cotton. 450gsm heavyweight fleece. Made in Portugal.",
     fit: "Relaxed fit. True to size. Model is 6'1\" and wears a size L.",
@@ -28,6 +29,7 @@ const getProductById = (id: string) => {
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const product = getProductById(id);
+  const [activeImage, setActiveImage] = useState(0);
 
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">
@@ -53,18 +55,62 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
               
               {/* Product Images (Left) */}
-              <div className="lg:col-span-7 flex flex-col gap-4">
-                {product.images.map((img, idx) => (
-                  <div key={idx} className="relative w-full aspect-[0.8] bg-[#f8f8f8]">
-                    <Image 
-                      src={img}
-                      alt={`${product.name} Image ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      priority={idx === 0}
-                    />
+              <div className="lg:col-span-7 flex flex-col items-center">
+                <div className="w-full xl:w-[70%] flex flex-col gap-4">
+                  
+                  <div className="flex items-center w-full gap-2 md:gap-4">
+                    {/* Left Arrow */}
+                    {product.images.length > 1 && (
+                      <button 
+                        onClick={() => setActiveImage(prev => prev === 0 ? product.images.length - 1 : prev - 1)}
+                        className="shrink-0 bg-white text-[#1c1a19] w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full border border-[#e5e5e5] hover:border-[#1c1a19] transition-colors"
+                      >
+                        <Icon icon="lucide:chevron-left" width="20" />
+                      </button>
+                    )}
+
+                    {/* Main Image Carousel */}
+                    <div className="relative w-full aspect-[0.8] bg-[#f8f8f8] overflow-hidden">
+                      <Image 
+                        src={product.images[activeImage]}
+                        alt={`${product.name} Image ${activeImage + 1}`}
+                        fill
+                        className="object-cover transition-opacity duration-300"
+                        priority
+                      />
+                    </div>
+                    
+                    {/* Right Arrow */}
+                    {product.images.length > 1 && (
+                      <button 
+                        onClick={() => setActiveImage(prev => prev === product.images.length - 1 ? 0 : prev + 1)}
+                        className="shrink-0 bg-white text-[#1c1a19] w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full border border-[#e5e5e5] hover:border-[#1c1a19] transition-colors"
+                      >
+                        <Icon icon="lucide:chevron-right" width="20" />
+                      </button>
+                    )}
                   </div>
-                ))}
+
+                  {/* Thumbnail Previews */}
+                  {product.images.length > 1 && (
+                    <div className="flex justify-center gap-2 w-full overflow-x-auto scrollbar-hide snap-x">
+                      {product.images.map((img, idx) => (
+                        <button 
+                          key={idx}
+                          onClick={() => setActiveImage(idx)}
+                          className={`relative w-16 md:w-20 aspect-[0.8] bg-[#f8f8f8] shrink-0 snap-start transition-all ${activeImage === idx ? 'ring-1 ring-[#1c1a19] opacity-100' : 'opacity-50 hover:opacity-100'}`}
+                        >
+                          <Image 
+                            src={img}
+                            alt={`Preview ${idx + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Product Details (Right - Sticky) */}
