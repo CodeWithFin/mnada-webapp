@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
+import Lottie from "lottie-react";
+import emptyCartAnimation from "@/assets/animations/empty-cart.json";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, subtotal } = useCart();
@@ -45,7 +47,10 @@ export default function CartPage() {
             </h1>
 
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-8">
+              <div className="flex flex-col items-center justify-center py-10 lg:py-20 gap-8">
+                <div className="w-full max-w-[300px] md:max-w-[400px]">
+                  <Lottie animationData={emptyCartAnimation} loop={true} />
+                </div>
                 <div className="text-xl font-mono uppercase tracking-widest text-gray-400">Your cart is empty</div>
                 <Link 
                   href="/mens" 
