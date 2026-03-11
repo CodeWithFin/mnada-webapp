@@ -8,8 +8,6 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
-import Lottie from "lottie-react";
-import emptyCartAnimation from "@/assets/animations/empty-cart.json";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, subtotal } = useCart();
@@ -47,14 +45,8 @@ export default function CartPage() {
             </h1>
 
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 lg:py-16 gap-6 w-full">
-                <div className="w-full max-w-[400px] md:max-w-[500px] aspect-square flex items-center justify-center">
-                  <Lottie 
-                    animationData={emptyCartAnimation} 
-                    loop={true}
-                    style={{ height: '100%', width: '100%' }}
-                  />
-                </div>
+              <div className="flex flex-col items-center justify-center py-20 lg:py-32 gap-8 text-center">
+                <Icon icon="lucide:shopping-bag" width="64" className="text-gray-200 mb-2" />
                 <div className="text-xl font-mono uppercase tracking-widest text-gray-400">Your cart is empty</div>
                 <Link 
                   href="/mens" 
