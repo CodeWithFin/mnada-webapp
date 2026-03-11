@@ -12,10 +12,6 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "Mnada | Minimal Mono",
   description: "Provisions for the wild. Industrial goods for the modern pioneer.",
-  icons: {
-    icon: "/assets/logo/letter-m.png",
-    apple: "/assets/logo/letter-m.png",
-  },
 };
 
 export const viewport: Viewport = {
