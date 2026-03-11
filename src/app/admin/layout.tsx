@@ -9,6 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -78,12 +79,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <Icon icon="lucide:shopping-bag" width="18" /> Orders
           </Link>
-          <Link 
-            href="/admin/products" 
-            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === '/admin/products' ? 'text-[#a58c69] font-bold bg-[#f8f8f8]' : 'text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]'}`}
-          >
-            <Icon icon="lucide:package" width="18" /> Products
-          </Link>
+          <div className="flex flex-col">
+            <div className={`flex items-center justify-between transition-colors ${pathname === '/admin/products' ? 'bg-[#f8f8f8]' : 'hover:bg-[#fafafa]'}`}>
+              <Link 
+                href="/admin/products" 
+                className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest flex-1 ${pathname === '/admin/products' ? 'text-[#a58c69] font-bold' : 'text-gray-500 hover:text-[#1c1a19]'}`}
+              >
+                <Icon icon="lucide:package" width="18" /> Products
+              </Link>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsCategoryOpen(!isCategoryOpen);
+                }}
+                className={`pr-8 py-3 flex items-center justify-center text-gray-400 hover:text-[#1c1a19]`}
+              >
+                <Icon 
+                  icon="lucide:chevron-down" 
+                  width="16" 
+                  className={`transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </div>
+            
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCategoryOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="flex flex-col py-2 bg-[#fafafa]">
+                <Link href="/admin/products?category=mens" className="pl-14 pr-8 py-2 text-xs font-mono text-gray-500 hover:text-[#1c1a19] transition-colors">
+                  Men's
+                </Link>
+                <Link href="/admin/products?category=womens" className="pl-14 pr-8 py-2 text-xs font-mono text-gray-500 hover:text-[#1c1a19] transition-colors">
+                  Women's
+                </Link>
+                <Link href="/admin/products?category=accessories" className="pl-14 pr-8 py-2 text-xs font-mono text-gray-500 hover:text-[#1c1a19] transition-colors">
+                  Accessories
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="mt-auto border-t border-[#e5e5e5] p-6">
           <button onClick={handleLogout} className="flex items-center gap-3 text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors w-full">

@@ -233,6 +233,7 @@ export async function DELETE(req: Request) {
 
       // Unique images only
       const uniqueImages = Array.from(new Set(allImages));
+      const filesToRemove: string[] = [];
 
       for (const imgUrl of uniqueImages) {
         const urlParts = imgUrl.split('/');
