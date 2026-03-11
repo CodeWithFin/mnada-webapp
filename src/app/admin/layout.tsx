@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -14,25 +15,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const auth = localStorage.getItem("mnada_admin_auth");
-    if (auth === "true") {
+    const storedUsername = localStorage.getItem("mnada_admin_username");
+    if (auth === "true" && storedUsername) {
       setIsAuthenticated(true);
+      setUsername(storedUsername);
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "mnada2025") { // Simple MVP password
-      localStorage.setItem("mnada_admin_auth", "true");
-      setIsAuthenticated(true);
-      setError("");
-    } else {
-      setError("Incorrect password");
+    setError("");
+    
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        localStorage.setItem("mnada_admin_auth", "true");
+        localStorage.setItem("mnada_admin_username", username);
+        localStorage.setItem("mnada_admin_token", data.token);
+        setIsAuthenticated(true);
+      } else {
+        setError(data.error || "Authentication failed");
+      }
+    } catch (err) {
+      setError("An error occurred during login");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("mnada_admin_auth");
+    localStorage.removeItem("mnada_admin_username");
+    localStorage.removeItem("mnada_admin_token");
     setIsAuthenticated(false);
+    setUsername("");
+    setPassword("");
   };
 
   if (!isAuthenticated) {
@@ -41,16 +63,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <form onSubmit={handleLogin} className="bg-white p-10 max-w-sm w-full border border-[#e5e5e5] flex flex-col gap-6">
           <div className="text-center">
             <h1 className="text-2xl font-bold uppercase tracking-widest text-[#1c1a19] mb-2">Mnada Admin</h1>
-            <p className="text-xs font-mono text-gray-500">Enter password to access dashboard</p>
+            <p className="text-xs font-mono text-gray-500">Sign in to access dashboard</p>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
-            autoFocus
-          />
+          <div className="flex flex-col gap-4">
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
+              autoFocus
+              required
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
+              required
+            />
+          </div>
           {error && <p className="text-red-500 text-xs font-mono text-center">{error}</p>}
           <button type="submit" className="h-12 bg-[#1c1a19] text-white font-bold uppercase tracking-widest text-xs hover:bg-[#a58c69] transition-colors">
             Login
@@ -80,10 +113,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Icon icon="lucide:shopping-bag" width="18" /> Orders
           </Link>
           <div className="flex flex-col">
-            <div className={`flex items-center justify-between transition-colors ${pathname === '/admin/products' ? 'bg-[#f8f8f8]' : 'hover:bg-[#fafafa]'}`}>
+            <div className={`flex items-center justify-between transition-colors ${(pathname === '/admin/products' || pathname.startsWith('/admin/products/'))  ? 'bg-[#f8f8f8]' : 'hover:bg-[#fafafa]'}`}>
               <Link 
                 href="/admin/products" 
-                className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest flex-1 ${pathname === '/admin/products' ? 'text-[#a58c69] font-bold' : 'text-gray-500 hover:text-[#1c1a19]'}`}
+                className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest flex-1 ${(pathname === '/admin/products' || pathname.startsWith('/admin/products/')) ? 'text-[#a58c69] font-bold' : 'text-gray-500 hover:text-[#1c1a19]'}`}
               >
                 <Icon icon="lucide:package" width="18" /> Products
               </Link>
@@ -116,6 +149,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
           </div>
+          
+          <Link 
+            href="/admin/settings" 
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === '/admin/settings' ? 'text-[#a58c69] font-bold bg-[#f8f8f8]' : 'text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]'}`}
+          >
+            <Icon icon="lucide:settings" width="18" /> Settings
+          </Link>
         </div>
         <div className="mt-auto border-t border-[#e5e5e5] p-6">
           <button onClick={handleLogout} className="flex items-center gap-3 text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors w-full">

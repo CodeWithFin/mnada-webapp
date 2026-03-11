@@ -41,6 +41,7 @@ export default function AdminProductsPage() {
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .neq('category', 'SYSTEM_AUTH')
       .order('created_at', { ascending: false });
       
     if (data && !error) {
@@ -127,7 +128,7 @@ export default function AdminProductsPage() {
     }
 
     setIsAdding(true);
-    const authHeader = `Bearer ${localStorage.getItem('mnada_admin_password') || 'mnada2025'}`;
+    const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
 
     try {
       const form = new FormData();
@@ -174,7 +175,7 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     
-    const authHeader = `Bearer ${localStorage.getItem('mnada_admin_password') || 'mnada2025'}`;
+    const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
     
     try {
       const response = await fetch(`/api/admin/products?id=${id}`, {

@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import jwt from 'jsonwebtoken';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.ADMIN_PASSWORD || 'mnada2025'}`) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
+  } catch (e) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -109,7 +116,13 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.ADMIN_PASSWORD || 'mnada2025'}`) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
+  } catch (e) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -201,7 +214,13 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.ADMIN_PASSWORD || 'mnada2025'}`) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
+  } catch (e) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -33,7 +33,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       // In a real app we'd use a more secure token standard than plain password in localstorage
-      const authHeader = `Bearer ${localStorage.getItem('mnada_admin_password') || 'mnada2025'}`;
+      const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
       
       try {
         const response = await fetch('/api/admin/orders', {
