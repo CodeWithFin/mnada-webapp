@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,14 @@ export const metadata: Metadata = {
   title: "Mnada | Minimal Mono",
   description: "Provisions for the wild. Industrial goods for the modern pioneer.",
 };
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 
 export default function RootLayout({
   children,
