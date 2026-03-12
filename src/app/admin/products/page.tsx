@@ -34,6 +34,7 @@ export default function AdminProductsPage() {
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -107,8 +108,9 @@ export default function AdminProductsPage() {
       description: cleanDescription,
       isNew: product.is_new
     });
-    setImageFiles([]); // Clear any previously selected file
-    setImagePreviews(product.images || [product.image]); // Show existing images as previews
+    setImageFiles([]); // Clear any previously selected files
+    setImagePreviews([]); // Clear any previously selected previews
+    setExistingImages(product.images || [product.image]); // Load existing images
     setIsModalOpen(true);
   };
 
@@ -117,6 +119,7 @@ export default function AdminProductsPage() {
     setFormData({ name: "", price: "", category: "Men\'s", description: "", isNew: false });
     setImageFiles([]);
     setImagePreviews([]);
+    setExistingImages([]);
     setIsModalOpen(false);
   };
 
@@ -135,10 +138,12 @@ export default function AdminProductsPage() {
       if (editingProductId) {
         form.append('id', editingProductId);
       }
-      if (imageFiles.length > 0) {
-          imageFiles.forEach(file => {
-              form.append('images', file);
-          });
+      imageFiles.forEach(file => {
+        form.append('images', file);
+      });
+      
+      if (editingProductId) {
+          form.append('existingImages', JSON.stringify(existingImages));
       }
       form.append('name', formData.name);
       form.append('price', formData.price);
@@ -227,7 +232,7 @@ export default function AdminProductsPage() {
             <form onSubmit={handleAddProduct} className="p-6 flex flex-col gap-6">
               
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Images {editingProductId ? "(Optional - overwrites current images)" : "*"}</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Images {editingProductId ? "(Optional)" : "*"}</label>
                 <div className="flex flex-col gap-4">
                   <input 
                     type="file" 
@@ -238,22 +243,76 @@ export default function AdminProductsPage() {
                     required={!editingProductId}
                   />
                   
-                  {imagePreviews.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative w-20 h-20 border border-[#e5e5e5] bg-[#f8f8f8]">
-                          <Image 
-                            src={preview} 
-                            alt={`Preview ${index}`} 
-                            fill 
-                            className="object-cover" 
-                            sizes="64px"
-                          />
+                  <div className="flex flex-col gap-4">
+                    {/* Existing Images (Gallery) */}
+                    {existingImages.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current Gallery:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {existingImages.map((url, index) => (
+                            <div key={url} className="relative w-24 h-24 border border-[#e5e5e5] bg-[#f8f8f8]">
+                              <Image 
+                                src={url} 
+                                alt={`Existing ${index}`} 
+                                fill 
+                                className="object-cover" 
+                                sizes="96px"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setExistingImages(prev => prev.filter(img => img !== url))}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-10"
+                                title="Remove existing image"
+                              >
+                                <Icon icon="lucide:x" width="14" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {editingProductId && <p className="text-[10px] text-gray-400 font-mono mt-1">Leave empty to keep current images. Providing new images will replace ALL existing ones.</p>}
+                      </div>
+                    )}
+
+                    {/* New Previews */}
+                    {imagePreviews.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">New Additions:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative w-24 h-24 border border-[#e5e5e5] bg-[#f8f8f8]">
+                              <Image 
+                                src={preview} 
+                                alt={`New Preview ${index}`} 
+                                fill 
+                                className="object-cover" 
+                                sizes="96px"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const newFiles = [...imageFiles];
+                                  const newPreviews = [...imagePreviews];
+                                  newFiles.splice(index, 1);
+                                  newPreviews.splice(index, 1);
+                                  setImageFiles(newFiles);
+                                  setImagePreviews(newPreviews);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-10"
+                                title="Remove new file"
+                              >
+                                <Icon icon="lucide:x" width="14" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {editingProductId && (
+                      <p className="text-[10px] text-gray-400 font-mono mt-1">
+                        Use the (X) to remove individual images. Newly uploaded images will be appended to the current gallery.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
