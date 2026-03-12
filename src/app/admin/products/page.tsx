@@ -331,11 +331,7 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                     
-                    {editingProductId && (
-                      <p className="text-[10px] text-gray-400 font-mono mt-1">
-                        Use the (X) to remove individual images. Newly uploaded images will be appended to the current gallery.
-                      </p>
-                    )}
+
                   </div>
                 </div>
               </div>
