@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
-    "@supabase/supabase-js": "^2.99.0",
+    "@supabase/supabase-js": "^2.99.1",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.6",
+    "pg": "^8.20.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.3",
