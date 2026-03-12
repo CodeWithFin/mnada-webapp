@@ -35,6 +35,7 @@ export default function AdminProductsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -72,7 +73,20 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.filter((c: any) => c.name !== 'SYSTEM_AUTH'));
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -116,7 +130,7 @@ export default function AdminProductsPage() {
 
   const resetForm = () => {
     setEditingProductId(null);
-    setFormData({ name: "", price: "", category: "Men\'s", description: "", isNew: false });
+    setFormData({ name: "", price: "", category: categories[0]?.name || "Men's", description: "", isNew: false });
     setImageFiles([]);
     setImagePreviews([]);
     setExistingImages([]);
@@ -348,11 +362,11 @@ export default function AdminProductsPage() {
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
-                    className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] bg-white"
+                    className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] bg-white capitalize"
                   >
-                    <option value="Men's">Men's</option>
-                    <option value="Women's">Women's</option>
-                    <option value="Accessories">Accessories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-center gap-3 pt-8">
