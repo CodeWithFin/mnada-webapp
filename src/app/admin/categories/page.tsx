@@ -16,10 +16,22 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [error, setError] = useState('');
+  
+  // Notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchCategories = async () => {
     try {
@@ -72,6 +84,7 @@ export default function AdminCategoriesPage() {
 
       if (res.ok) {
         setIsModalOpen(false);
+        showToast(`Category ${editingCategory ? 'updated' : 'created'} successfully`);
         fetchCategories();
       } else {
         const data = await res.json();
@@ -82,12 +95,13 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this category? Products in this category will not be deleted, but they will have an old category name.")) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
 
+    setIsDeleting(true);
     const token = localStorage.getItem('mnada_admin_token');
     try {
-      const res = await fetch(`/api/admin/categories?id=${id}`, {
+      const res = await fetch(`/api/admin/categories?id=${deleteConfirm.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -95,10 +109,16 @@ export default function AdminCategoriesPage() {
       });
 
       if (res.ok) {
+        showToast("Category deleted successfully");
+        setDeleteConfirm(null);
         fetchCategories();
+      } else {
+        showToast("Failed to delete category", "error");
       }
     } catch (err) {
-      console.error("Failed to delete category:", err);
+      showToast("Error deleting category", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -157,7 +177,7 @@ export default function AdminCategoriesPage() {
                           <Icon icon="lucide:edit-2" width="16" />
                         </button>
                         <button 
-                          onClick={() => handleDelete(category.id)}
+                          onClick={() => setDeleteConfirm(category)}
                           className="text-gray-400 hover:text-red-500 transition-colors"
                           title="Delete"
                         >
@@ -172,6 +192,54 @@ export default function AdminCategoriesPage() {
           </table>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500`}>
+          <div className={`${toast.type === 'success' ? 'bg-[#1c1a19]' : 'bg-red-600'} text-white px-8 py-4 flex items-center gap-3 shadow-2xl border-l-4 ${toast.type === 'success' ? 'border-[#a58c69]' : 'border-white'}`}>
+            <Icon icon={toast.type === 'success' ? "lucide:check-circle" : "lucide:alert-circle"} width="20" />
+            <span className="text-xs font-mono uppercase tracking-widest">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md border border-[#eaeaea] p-10 animate-in fade-in zoom-in duration-300">
+            <div className="flex flex-col items-center text-center gap-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500">
+                <Icon icon="lucide:alert-triangle" width="32" />
+              </div>
+              <div>
+                <h2 className="text-xl font-mono uppercase tracking-widest text-[#1c1a19]">Delete Category?</h2>
+                <p className="text-sm font-mono text-gray-500 mt-4 leading-relaxed">
+                  Are you sure you want to delete <span className="text-[#1c1a19] font-bold">"{deleteConfirm.name}"</span>?
+                  <br />
+                  <span className="text-xs mt-2 block">Products in this category will remain, but their category label will be outdated.</span>
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                <button 
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={isDeleting}
+                  className="px-8 py-4 text-xs font-mono uppercase tracking-widest border border-[#eaeaea] hover:bg-[#fafafa] transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-red-600 text-white px-8 py-4 text-xs font-mono uppercase tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDeleting ? <Icon icon="lucide:loader" className="animate-spin" /> : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

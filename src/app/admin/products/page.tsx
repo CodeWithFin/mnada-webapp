@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +22,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const searchParams = useSearchParams();
+  const categoryFilter = searchParams.get('category');
   
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,11 +43,16 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setIsLoading(true);
     // We can use the public client because products are readable by everyone
-    const { data, error } = await supabase
+    let query = supabase
       .from('products')
       .select('*')
-      .neq('category', 'SYSTEM_AUTH')
-      .order('created_at', { ascending: false });
+      .neq('category', 'SYSTEM_AUTH');
+    
+    if (categoryFilter) {
+      query = query.eq('category', categoryFilter);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
       
     if (data && !error) {
       const formattedProducts = data.map((p: any) => {
@@ -74,7 +82,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [categoryFilter]);
 
   const fetchCategories = async () => {
     try {
@@ -219,7 +227,9 @@ export default function AdminProductsPage() {
     <div className="flex flex-col gap-8">
       <header className="flex justify-between items-end border-b border-[#e5e5e5] pb-4">
         <div>
-          <h1 className="text-3xl font-bold uppercase tracking-tight text-[#1c1a19]">Products</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-tight text-[#1c1a19]">
+            Products {categoryFilter ? `- ${categoryFilter}` : ""}
+          </h1>
           <p className="text-sm font-mono text-gray-500 mt-2">Manage your inventory</p>
         </div>
         <button 
