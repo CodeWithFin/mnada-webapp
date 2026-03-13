@@ -177,19 +177,44 @@ export async function PUT(req: Request) {
       is_new: isNew
     };
 
-    if (newImageUrls.length > 0) {
-      updatePayload.image = newImageUrls[0];
-      updatePayload.main_image_url = newImageUrls[0];
-      const galleryDelimiter = "\n\n---GALLERY_DATA---";
-      updatePayload.description = `${description}${galleryDelimiter}${JSON.stringify(newImageUrls)}`;
-    } else {
-      // Fetch existing product gallery data to preserve it
-      const { data: existingProduct } = await supabaseAdmin.from('products').select('description').eq('id', id).single();
-      if (existingProduct && existingProduct.description && existingProduct.description.includes("---GALLERY_DATA---")) {
-        const existingGalleryJSON = existingProduct.description.split("---GALLERY_DATA---")[1];
-        const galleryDelimiter = "\n\n---GALLERY_DATA---";
-        updatePayload.description = `${description}${galleryDelimiter}${existingGalleryJSON}`;
+    // Parse existing images from formData
+    const existingImagesStr = formData.get('existingImages') as string;
+    let finalImages: string[] = [];
+    if (existingImagesStr) {
+      try {
+        finalImages = JSON.parse(existingImagesStr);
+      } catch (e) {
+        console.error("Error parsing existingImages:", e);
       }
+    }
+
+    // Fallback: preserve current gallery when client doesn't send existingImages
+    if (finalImages.length === 0) {
+      const { data: existingProduct } = await supabaseAdmin
+        .from('products')
+        .select('description')
+        .eq('id', id)
+        .single();
+
+      if (existingProduct?.description?.includes("---GALLERY_DATA---")) {
+        try {
+          finalImages = JSON.parse(existingProduct.description.split("---GALLERY_DATA---")[1]);
+        } catch (e) {
+          console.error("Error parsing existing gallery data:", e);
+        }
+      }
+    }
+
+    // Append new images
+    if (newImageUrls.length > 0) {
+      finalImages = [...finalImages, ...newImageUrls];
+    }
+
+    if (finalImages.length > 0) {
+      updatePayload.image = finalImages[0];
+      updatePayload.main_image_url = finalImages[0];
+      const galleryDelimiter = "\n\n---GALLERY_DATA---";
+      updatePayload.description = `${description}${galleryDelimiter}${JSON.stringify(finalImages)}`;
     }
 
     const { data: updateData, error: updateError } = await supabaseAdmin

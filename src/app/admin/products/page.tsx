@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +22,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const searchParams = useSearchParams();
+  const categoryFilter = searchParams.get('category');
   
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,15 +37,22 @@ export default function AdminProductsPage() {
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
     // We can use the public client because products are readable by everyone
-    const { data, error } = await supabase
+    let query = supabase
       .from('products')
       .select('*')
-      .neq('category', 'SYSTEM_AUTH')
-      .order('created_at', { ascending: false });
+      .neq('category', 'SYSTEM_AUTH');
+    
+    if (categoryFilter) {
+      query = query.eq('category', categoryFilter);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
       
     if (data && !error) {
       const formattedProducts = data.map((p: any) => {
@@ -71,7 +81,20 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    fetchCategories();
+  }, [categoryFilter]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.filter((c: any) => c.name !== 'SYSTEM_AUTH'));
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -107,16 +130,18 @@ export default function AdminProductsPage() {
       description: cleanDescription,
       isNew: product.is_new
     });
-    setImageFiles([]); // Clear any previously selected file
-    setImagePreviews(product.images || [product.image]); // Show existing images as previews
+    setImageFiles([]); // Clear any previously selected files
+    setImagePreviews([]); // Clear any previously selected previews
+    setExistingImages(product.images || [product.image]); // Load existing images
     setIsModalOpen(true);
   };
 
   const resetForm = () => {
     setEditingProductId(null);
-    setFormData({ name: "", price: "", category: "Men\'s", description: "", isNew: false });
+    setFormData({ name: "", price: "", category: categories[0]?.name || "Men's", description: "", isNew: false });
     setImageFiles([]);
     setImagePreviews([]);
+    setExistingImages([]);
     setIsModalOpen(false);
   };
 
@@ -135,10 +160,12 @@ export default function AdminProductsPage() {
       if (editingProductId) {
         form.append('id', editingProductId);
       }
-      if (imageFiles.length > 0) {
-          imageFiles.forEach(file => {
-              form.append('images', file);
-          });
+      imageFiles.forEach(file => {
+        form.append('images', file);
+      });
+      
+      if (editingProductId) {
+          form.append('existingImages', JSON.stringify(existingImages));
       }
       form.append('name', formData.name);
       form.append('price', formData.price);
@@ -200,7 +227,9 @@ export default function AdminProductsPage() {
     <div className="flex flex-col gap-8">
       <header className="flex justify-between items-end border-b border-[#e5e5e5] pb-4">
         <div>
-          <h1 className="text-3xl font-bold uppercase tracking-tight text-[#1c1a19]">Products</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-tight text-[#1c1a19]">
+            Products {categoryFilter ? `- ${categoryFilter}` : ""}
+          </h1>
           <p className="text-sm font-mono text-gray-500 mt-2">Manage your inventory</p>
         </div>
         <button 
@@ -227,7 +256,7 @@ export default function AdminProductsPage() {
             <form onSubmit={handleAddProduct} className="p-6 flex flex-col gap-6">
               
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Images {editingProductId ? "(Optional - overwrites current images)" : "*"}</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Product Images {editingProductId ? "(Optional)" : "*"}</label>
                 <div className="flex flex-col gap-4">
                   <input 
                     type="file" 
@@ -238,22 +267,72 @@ export default function AdminProductsPage() {
                     required={!editingProductId}
                   />
                   
-                  {imagePreviews.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative w-20 h-20 border border-[#e5e5e5] bg-[#f8f8f8]">
-                          <Image 
-                            src={preview} 
-                            alt={`Preview ${index}`} 
-                            fill 
-                            className="object-cover" 
-                            sizes="64px"
-                          />
+                  <div className="flex flex-col gap-4">
+                    {/* Existing Images (Gallery) */}
+                    {existingImages.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current Gallery:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {existingImages.map((url, index) => (
+                            <div key={url} className="relative w-24 h-24 border border-[#e5e5e5] bg-[#f8f8f8]">
+                              <Image 
+                                src={url} 
+                                alt={`Existing ${index}`} 
+                                fill 
+                                className="object-cover" 
+                                sizes="96px"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setExistingImages(prev => prev.filter(img => img !== url))}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-10"
+                                title="Remove existing image"
+                              >
+                                <Icon icon="lucide:x" width="14" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {editingProductId && <p className="text-[10px] text-gray-400 font-mono mt-1">Leave empty to keep current images. Providing new images will replace ALL existing ones.</p>}
+                      </div>
+                    )}
+
+                    {/* New Previews */}
+                    {imagePreviews.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">New Additions:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative w-24 h-24 border border-[#e5e5e5] bg-[#f8f8f8]">
+                              <Image 
+                                src={preview} 
+                                alt={`New Preview ${index}`} 
+                                fill 
+                                className="object-cover" 
+                                sizes="96px"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const newFiles = [...imageFiles];
+                                  const newPreviews = [...imagePreviews];
+                                  newFiles.splice(index, 1);
+                                  newPreviews.splice(index, 1);
+                                  setImageFiles(newFiles);
+                                  setImagePreviews(newPreviews);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors z-10"
+                                title="Remove new file"
+                              >
+                                <Icon icon="lucide:x" width="14" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+
+                  </div>
                 </div>
               </div>
 
@@ -289,11 +368,11 @@ export default function AdminProductsPage() {
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
-                    className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] bg-white"
+                    className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] bg-white capitalize"
                   >
-                    <option value="Men's">Men's</option>
-                    <option value="Women's">Women's</option>
-                    <option value="Accessories">Accessories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-center gap-3 pt-8">
