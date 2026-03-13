@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   try {
     const formData = await req.formData();
-    
+
     const files = formData.getAll('images') as File[];
     const name = formData.get('name') as string;
     const price = formData.get('price') as string;
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
         console.error("Storage upload error:", uploadError);
         // Clean up already uploaded images if one fails
         if (uploadedFilePaths.length > 0) {
-            await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
+          await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
         }
-        return NextResponse.json({ 
-          error: 'Failed to upload images', 
+        return NextResponse.json({
+          error: 'Failed to upload images',
           details: uploadError.message,
           bucket: 'product-images'
         }, { status: 500 });
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         .storage
         .from('product-images')
         .getPublicUrl(uploadData.path);
-      
+
       uploadedImageUrls.push(publicUrlData.publicUrl);
     }
 
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
     // 3. Insert the new product into the database
     // Generates a mock_id for backwards compatibility with dynamic router
-    const mockId = `new-${Date.now()}`; 
+    const mockId = `new-${Date.now()}`;
 
     const { data: insertData, error: insertError } = await supabaseAdmin
       .from('products')
@@ -97,10 +97,10 @@ export async function POST(req: Request) {
       console.error("Database insert error:", insertError);
       // Clean up the uploaded image if DB insert fails
       if (uploadedFilePaths.length > 0) {
-          await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
+        await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
       }
-      return NextResponse.json({ 
-        error: 'Failed to insert product record', 
+      return NextResponse.json({
+        error: 'Failed to insert product record',
         details: insertError.message,
         code: insertError.code
       }, { status: 500 });
@@ -128,7 +128,7 @@ export async function PUT(req: Request) {
 
   try {
     const formData = await req.formData();
-    
+
     const id = formData.get('id') as string;
     const files = formData.getAll('images') as File[];
     const name = formData.get('name') as string;
@@ -145,51 +145,51 @@ export async function PUT(req: Request) {
 
     // Check if there are new images to upload
     if (files.length > 0 && files[0].size > 0 && files[0].name !== 'undefined') {
-        for (const file of files) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            
-            const { data: uploadData, error: uploadError } = await supabaseAdmin
-            .storage
-            .from('product-images')
-            .upload(fileName, file, { cacheControl: '3600', upsert: false });
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-            if (uploadError) {
-              console.error("Storage upload error:", uploadError);
-              return NextResponse.json({ error: 'Failed to upload new images' }, { status: 500 });
-            }
+        const { data: uploadData, error: uploadError } = await supabaseAdmin
+          .storage
+          .from('product-images')
+          .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
-            const { data: publicUrlData } = supabaseAdmin
-            .storage
-            .from('product-images')
-            .getPublicUrl(uploadData.path);
-            
-            newImageUrls.push(publicUrlData.publicUrl);
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError);
+          return NextResponse.json({ error: 'Failed to upload new images' }, { status: 500 });
         }
+
+        const { data: publicUrlData } = supabaseAdmin
+          .storage
+          .from('product-images')
+          .getPublicUrl(uploadData.path);
+
+        newImageUrls.push(publicUrlData.publicUrl);
+      }
     }
 
     // Build update payload
     const updatePayload: any = {
-        name: name,
-        price: Number(price),
-        category: category,
-        description: description,
-        is_new: isNew
+      name: name,
+      price: Number(price),
+      category: category,
+      description: description,
+      is_new: isNew
     };
 
     if (newImageUrls.length > 0) {
-        updatePayload.image = newImageUrls[0];
-        updatePayload.main_image_url = newImageUrls[0];
-        const galleryDelimiter = "\n\n---GALLERY_DATA---";
-        updatePayload.description = `${description}${galleryDelimiter}${JSON.stringify(newImageUrls)}`;
+      updatePayload.image = newImageUrls[0];
+      updatePayload.main_image_url = newImageUrls[0];
+      const galleryDelimiter = "\n\n---GALLERY_DATA---";
+      updatePayload.description = `${description}${galleryDelimiter}${JSON.stringify(newImageUrls)}`;
     } else {
-        // Fetch existing product gallery data to preserve it
-        const { data: existingProduct } = await supabaseAdmin.from('products').select('description').eq('id', id).single();
-        if (existingProduct && existingProduct.description && existingProduct.description.includes("---GALLERY_DATA---")) {
-            const existingGalleryJSON = existingProduct.description.split("---GALLERY_DATA---")[1];
-            const galleryDelimiter = "\n\n---GALLERY_DATA---";
-            updatePayload.description = `${description}${galleryDelimiter}${existingGalleryJSON}`;
-        }
+      // Fetch existing product gallery data to preserve it
+      const { data: existingProduct } = await supabaseAdmin.from('products').select('description').eq('id', id).single();
+      if (existingProduct && existingProduct.description && existingProduct.description.includes("---GALLERY_DATA---")) {
+        const existingGalleryJSON = existingProduct.description.split("---GALLERY_DATA---")[1];
+        const galleryDelimiter = "\n\n---GALLERY_DATA---";
+        updatePayload.description = `${description}${galleryDelimiter}${existingGalleryJSON}`;
+      }
     }
 
     const { data: updateData, error: updateError } = await supabaseAdmin
@@ -242,7 +242,7 @@ export async function DELETE(req: Request) {
       if (product.description && product.description.includes("---GALLERY_DATA---")) {
         try {
           galleryImages = JSON.parse(product.description.split("---GALLERY_DATA---")[1]);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const allImages = [
@@ -259,7 +259,7 @@ export async function DELETE(req: Request) {
         const fileName = urlParts[urlParts.length - 1];
         filesToRemove.push(fileName);
       }
-      
+
       if (filesToRemove.length > 0) {
         await supabaseAdmin.storage.from('product-images').remove(filesToRemove);
       }

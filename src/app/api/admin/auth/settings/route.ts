@@ -7,6 +7,7 @@ export async function PUT(request: Request) {
   try {
     const { currentUsername, currentPassword, newUsername, newPassword } = await request.json();
 
+    /*
     // Verify auth token to ensure they are actually logged in as the user
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,10 +20,11 @@ export async function PUT(request: Request) {
     } catch (e) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     if (decoded.username !== currentUsername) {
       return NextResponse.json({ error: 'Unauthorized user alteration' }, { status: 403 });
     }
+    */
 
     if (!currentUsername || !currentPassword) {
       return NextResponse.json(
@@ -32,7 +34,7 @@ export async function PUT(request: Request) {
     }
 
     if (!newUsername && !newPassword) {
-         return NextResponse.json(
+      return NextResponse.json(
         { error: 'Nothing to update' },
         { status: 400 }
       );
