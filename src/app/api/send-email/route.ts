@@ -1,12 +1,44 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendSMS } from "@/lib/tilil";
+import { getOrderReference } from "@/lib/orderReference";
 
 const OWNER_PHONE = "0746551520";
 
+type CheckoutCustomer = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  postalCode: string;
+  phone: string;
+};
+
+type CheckoutOrderItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  size: string;
+};
+
 export async function POST(req: Request) {
   try {
-    const { customer, orderDetails, subtotal, shipping, total } = await req.json();
+    const {
+      customer,
+      orderDetails,
+      subtotal,
+      shipping,
+      total
+    }: {
+      customer: CheckoutCustomer;
+      orderDetails: CheckoutOrderItem[];
+      subtotal: number;
+      shipping: number;
+      total: number | string;
+    } = await req.json();
 
     // 1. Insert Order into Database
     const { data: orderData, error: orderError } = await supabaseAdmin
@@ -24,7 +56,7 @@ export async function POST(req: Request) {
         shipping_cost: shipping,
         total: total.toString()
       })
-      .select('id')
+      .select('id, created_at')
       .single();
 
     if (orderError) {
@@ -33,7 +65,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Insert Order Items
-    const orderItemsToInsert = orderDetails.map((item: any) => ({
+    const orderItemsToInsert = orderDetails.map((item) => ({
       order_id: orderData.id,
       product_id: item.id,
       product_name: item.name,
@@ -55,22 +87,23 @@ export async function POST(req: Request) {
     const totalFormatted = isNaN(totalNum) ? String(total) : totalNum.toFixed(2);
 
     const itemsSummary = orderDetails
-      .map((item: any) => `${item.name} x${item.quantity}`)
+      .map((item) => `${item.name} x${item.quantity}`)
       .join(", ");
 
     const smsPromises: Promise<void>[] = [];
+    const orderReference = getOrderReference(orderData);
 
     // SMS to customer (only if they provided a phone number)
     if (customer.phone) {
       const customerMsg =
-        `Hello ${customer.firstName}, your Mnada order #${orderData.id} has been received! ` +
+        `Hello ${customer.firstName}, your Mnada order ${orderReference} has been received! ` +
         `Total: KSh ${totalFormatted}. We will contact you to arrange payment & delivery. Thank you!`;
       smsPromises.push(sendSMS(customer.phone, customerMsg));
     }
 
     // SMS to owner
     const ownerMsg =
-      `New Mnada order #${orderData.id} from ${customer.firstName} ${customer.lastName}` +
+      `New Mnada order ${orderReference} from ${customer.firstName} ${customer.lastName}` +
       (customer.phone ? ` (${customer.phone})` : "") +
       `. Items: ${itemsSummary}. Total: KSh ${totalFormatted}.`;
     smsPromises.push(sendSMS(OWNER_PHONE, ownerMsg));
@@ -82,7 +115,7 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, orderId: orderData.id });
+    return NextResponse.json({ success: true, orderId: orderData.id, orderReference });
   } catch (error) {
     console.error("Order error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });

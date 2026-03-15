@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
+import { getOrderReference } from "@/lib/orderReference";
 
 const ORDER_STATUSES = ["pending", "confirmed", "dispatched", "delivered", "cancelled"] as const;
 
@@ -181,7 +182,7 @@ export default function AdminOrdersPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Order ID</span>
-                  <span className="text-xs font-mono text-[#1c1a19] uppercase">#{order.id.split("-")[0]}</span>
+                  <span className="text-xs font-mono text-[#1c1a19] uppercase">{getOrderReference(order)}</span>
                 </div>
                 <div className="flex flex-col gap-2 md:items-end">
                   <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 ${statusClasses[order.status] || "bg-gray-100 text-gray-700"}`}>
