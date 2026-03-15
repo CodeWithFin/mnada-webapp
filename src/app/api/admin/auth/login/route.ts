@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { createRoleToken, findSystemUser } from '@/lib/systemAuth';
 
 export async function POST(request: Request) {
   try {
@@ -14,17 +13,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch the admin user from the alternative storage in products table
-    const { data: adminUser, error } = await supabaseAdmin
-      .from('products')
-      .select('*')
-      .eq('category', 'SYSTEM_AUTH')
-      .eq('name', username)
-      .single();
+    const adminUser = await findSystemUser(username, 'admin');
 
-    if (error || !adminUser) {
-      console.log("Login Error (DB or not found):", error, adminUser ? "User found" : "No user");
-      // Return a generic error to prevent username enumeration
+    if (!adminUser) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
@@ -35,7 +26,6 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, adminUser.description);
 
     if (!isPasswordValid) {
-      console.log("Login Error (Invalid password)");
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
@@ -43,15 +33,11 @@ export async function POST(request: Request) {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { username: adminUser.name, id: adminUser.id },
-      process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret',
-      { expiresIn: '24h' }
-    );
+    const token = createRoleToken(adminUser, 'admin');
 
     // Authentication successful
     return NextResponse.json(
-      { success: true, message: 'Authentication successful', token },
+      { success: true, message: 'Authentication successful', token, role: 'admin', username: adminUser.name },
       { status: 200 }
     );
   } catch (error) {

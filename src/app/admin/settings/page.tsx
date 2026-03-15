@@ -30,7 +30,10 @@ export default function AdminSettingsPage() {
 
       const res = await fetch("/api/admin/auth/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("mnada_admin_token")}`
+        },
         body: JSON.stringify({
           currentUsername: parentUsername,
           currentPassword,
@@ -54,7 +57,7 @@ export default function AdminSettingsPage() {
       } else {
         setMessage({ type: "error", text: data.error || "Failed to update settings." });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: "error", text: "An error occurred." });
     } finally {
       setIsLoading(false);

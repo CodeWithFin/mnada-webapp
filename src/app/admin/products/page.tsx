@@ -22,6 +22,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const searchParams = useSearchParams();
   const categoryFilter = searchParams.get('category');
   
@@ -223,6 +224,47 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleDeleteAllProducts = async () => {
+    if (products.length === 0) {
+      return;
+    }
+
+    const firstConfirm = window.confirm(`Delete all ${products.length} products? This cannot be undone.`);
+    if (!firstConfirm) {
+      return;
+    }
+
+    const secondConfirm = window.confirm('Please confirm again: delete ALL products now?');
+    if (!secondConfirm) {
+      return;
+    }
+
+    const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
+    setIsDeletingAll(true);
+
+    try {
+      const response = await fetch('/api/admin/products?all=true', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': authHeader
+        }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to delete all products');
+      }
+
+      setProducts([]);
+      alert('All products deleted successfully.');
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Could not delete all products.');
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <header className="flex justify-between items-end border-b border-[#e5e5e5] pb-4">
@@ -232,12 +274,23 @@ export default function AdminProductsPage() {
           </h1>
           <p className="text-sm font-mono text-gray-500 mt-2">Manage your inventory</p>
         </div>
-        <button 
-          onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="h-10 px-6 bg-[#1c1a19] text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-[#a58c69] transition-colors"
-        >
-          <Icon icon="lucide:plus" width="16" /> Add Product
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDeleteAllProducts}
+            disabled={isLoading || products.length === 0 || isDeletingAll}
+            className="h-10 px-4 bg-red-600 text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeletingAll ? <Icon icon="lucide:loader" width="16" className="animate-spin" /> : <Icon icon="lucide:trash-2" width="16" />}
+            Delete All
+          </button>
+
+          <button
+            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            className="h-10 px-6 bg-[#1c1a19] text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-[#a58c69] transition-colors"
+          >
+            <Icon icon="lucide:plus" width="16" /> Add Product
+          </button>
+        </div>
       </header>
 
       {/* Add Product Modal Overlay */}

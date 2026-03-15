@@ -1,18 +1,111 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
+import { verifyRoleRequest } from '@/lib/systemAuth';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+const PRODUCT_IMAGES_BUCKET = 'product-images';
+const SYSTEM_AUTH_CATEGORY = 'SYSTEM_AUTH';
+
+function extractStoragePathFromPublicUrl(url: string) {
+  const marker = `/storage/v1/object/public/${PRODUCT_IMAGES_BUCKET}/`;
+  const markerIndex = url.indexOf(marker);
+  if (markerIndex === -1) return null;
+
+  const pathWithQuery = url.substring(markerIndex + marker.length);
+  return pathWithQuery.split('?')[0] || null;
+}
+
+function parseGalleryUrls(description?: string | null) {
+  if (!description || !description.includes('---GALLERY_DATA---')) {
+    return [] as string[];
   }
-  const token = authHeader.split(' ')[1];
+
   try {
-    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
-  } catch (e) {
+    const parsed = JSON.parse(description.split('---GALLERY_DATA---')[1]);
+    return Array.isArray(parsed) ? parsed.filter((url) => typeof url === 'string') : [];
+  } catch {
+    return [] as string[];
+  }
+}
+
+function isBucketImageUrl(url: string) {
+  return url.includes(`/storage/v1/object/public/${PRODUCT_IMAGES_BUCKET}/`);
+}
+
+function inferContentTypeAndExt(url: string, contentTypeHeader: string | null) {
+  const contentType = (contentTypeHeader || '').toLowerCase();
+
+  if (contentType.includes('image/jpeg')) return { contentType: 'image/jpeg', ext: 'jpg' };
+  if (contentType.includes('image/png')) return { contentType: 'image/png', ext: 'png' };
+  if (contentType.includes('image/webp')) return { contentType: 'image/webp', ext: 'webp' };
+  if (contentType.includes('image/gif')) return { contentType: 'image/gif', ext: 'gif' };
+  if (contentType.includes('image/avif')) return { contentType: 'image/avif', ext: 'avif' };
+
+  const extFromUrl = url.split('?')[0].split('.').pop()?.toLowerCase() || 'jpg';
+  const fallbackType = extFromUrl === 'png'
+    ? 'image/png'
+    : extFromUrl === 'webp'
+      ? 'image/webp'
+      : extFromUrl === 'gif'
+        ? 'image/gif'
+        : extFromUrl === 'avif'
+          ? 'image/avif'
+          : 'image/jpeg';
+
+  return { contentType: fallbackType, ext: extFromUrl };
+}
+
+async function migrateExternalUrlToBucket(externalUrl: string) {
+  const res = await fetch(externalUrl);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch existing image URL (${res.status})`);
+  }
+
+  const { contentType, ext } = inferContentTypeAndExt(externalUrl, res.headers.get('content-type'));
+  const fileBuffer = Buffer.from(await res.arrayBuffer());
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${ext}`;
+
+  const { data: uploadData, error: uploadError } = await supabaseAdmin
+    .storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .upload(fileName, fileBuffer, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to migrate existing image URL: ${uploadError.message}`);
+  }
+
+  const { data: publicUrlData } = supabaseAdmin
+    .storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .getPublicUrl(uploadData.path);
+
+  return publicUrlData.publicUrl;
+}
+
+async function ensureBucketImageUrls(urls: string[]) {
+  const out: string[] = [];
+
+  for (const url of urls) {
+    if (!url) continue;
+    if (isBucketImageUrl(url)) {
+      out.push(url);
+      continue;
+    }
+
+    const migrated = await migrateExternalUrlToBucket(url);
+    out.push(migrated);
+  }
+
+  return out;
+}
+
+export async function POST(req: Request) {
+  if (!(await verifyRoleRequest(req, 'admin'))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -41,7 +134,7 @@ export async function POST(req: Request) {
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin
         .storage
-        .from('product-images')
+        .from(PRODUCT_IMAGES_BUCKET)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -51,19 +144,19 @@ export async function POST(req: Request) {
         console.error("Storage upload error:", uploadError);
         // Clean up already uploaded images if one fails
         if (uploadedFilePaths.length > 0) {
-          await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
+          await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(uploadedFilePaths);
         }
         return NextResponse.json({
           error: 'Failed to upload images',
           details: uploadError.message,
-          bucket: 'product-images'
+          bucket: PRODUCT_IMAGES_BUCKET
         }, { status: 500 });
       }
 
       uploadedFilePaths.push(uploadData.path);
       const { data: publicUrlData } = supabaseAdmin
         .storage
-        .from('product-images')
+        .from(PRODUCT_IMAGES_BUCKET)
         .getPublicUrl(uploadData.path);
 
       uploadedImageUrls.push(publicUrlData.publicUrl);
@@ -97,7 +190,7 @@ export async function POST(req: Request) {
       console.error("Database insert error:", insertError);
       // Clean up the uploaded image if DB insert fails
       if (uploadedFilePaths.length > 0) {
-        await supabaseAdmin.storage.from('product-images').remove(uploadedFilePaths);
+        await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(uploadedFilePaths);
       }
       return NextResponse.json({
         error: 'Failed to insert product record',
@@ -115,14 +208,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const token = authHeader.split(' ')[1];
-  try {
-    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
-  } catch (e) {
+  if (!(await verifyRoleRequest(req, 'admin'))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -141,7 +227,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    let newImageUrls: string[] = [];
+    const newImageUrls: string[] = [];
 
     // Check if there are new images to upload
     if (files.length > 0 && files[0].size > 0 && files[0].name !== 'undefined') {
@@ -151,7 +237,7 @@ export async function PUT(req: Request) {
 
         const { data: uploadData, error: uploadError } = await supabaseAdmin
           .storage
-          .from('product-images')
+          .from(PRODUCT_IMAGES_BUCKET)
           .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
         if (uploadError) {
@@ -161,7 +247,7 @@ export async function PUT(req: Request) {
 
         const { data: publicUrlData } = supabaseAdmin
           .storage
-          .from('product-images')
+          .from(PRODUCT_IMAGES_BUCKET)
           .getPublicUrl(uploadData.path);
 
         newImageUrls.push(publicUrlData.publicUrl);
@@ -205,9 +291,19 @@ export async function PUT(req: Request) {
       }
     }
 
-    // Append new images
+    // Put newly uploaded images first so the first uploaded becomes the primary product image.
     if (newImageUrls.length > 0) {
-      finalImages = [...finalImages, ...newImageUrls];
+      finalImages = [...newImageUrls, ...finalImages];
+    }
+
+    // Remove duplicates while preserving order.
+    if (finalImages.length > 0) {
+      finalImages = Array.from(new Set(finalImages));
+    }
+
+    // Enforce bucket-backed images for all persisted gallery URLs.
+    if (finalImages.length > 0) {
+      finalImages = await ensureBucketImageUrls(finalImages);
     }
 
     if (finalImages.length > 0) {
@@ -238,20 +334,56 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const token = authHeader.split(' ')[1];
-  try {
-    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
-  } catch (e) {
+  if (!(await verifyRoleRequest(req, 'admin'))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const deleteAll = searchParams.get('all') === 'true';
+
+    if (deleteAll) {
+      const { data: products, error: productsError } = await supabaseAdmin
+        .from('products')
+        .select('id, image, description, category')
+        .neq('category', SYSTEM_AUTH_CATEGORY);
+
+      if (productsError) {
+        throw productsError;
+      }
+
+      const filesToRemove = new Set<string>();
+
+      for (const product of products || []) {
+        const urls = [
+          ...(product.image ? [product.image] : []),
+          ...parseGalleryUrls(product.description)
+        ];
+
+        for (const url of urls) {
+          const filePath = extractStoragePathFromPublicUrl(url);
+          if (filePath) {
+            filesToRemove.add(filePath);
+          }
+        }
+      }
+
+      if (filesToRemove.size > 0) {
+        await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(Array.from(filesToRemove));
+      }
+
+      const { error: deleteError } = await supabaseAdmin
+        .from('products')
+        .delete()
+        .neq('category', SYSTEM_AUTH_CATEGORY);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      return NextResponse.json({ success: true, deleted: products?.length || 0 });
+    }
 
     if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
 
@@ -263,30 +395,21 @@ export async function DELETE(req: Request) {
       .single();
 
     if (product) {
-      let galleryImages: string[] = [];
-      if (product.description && product.description.includes("---GALLERY_DATA---")) {
-        try {
-          galleryImages = JSON.parse(product.description.split("---GALLERY_DATA---")[1]);
-        } catch (e) { }
-      }
-
       const allImages = [
         ...(product.image ? [product.image] : []),
-        ...galleryImages
+        ...parseGalleryUrls(product.description)
       ];
 
-      // Unique images only
-      const uniqueImages = Array.from(new Set(allImages));
-      const filesToRemove: string[] = [];
-
-      for (const imgUrl of uniqueImages) {
-        const urlParts = imgUrl.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        filesToRemove.push(fileName);
-      }
+      const filesToRemove = Array.from(
+        new Set(
+          allImages
+            .map((url) => extractStoragePathFromPublicUrl(url))
+            .filter((path): path is string => Boolean(path))
+        )
+      );
 
       if (filesToRemove.length > 0) {
-        await supabaseAdmin.storage.from('product-images').remove(filesToRemove);
+        await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(filesToRemove);
       }
     }
 

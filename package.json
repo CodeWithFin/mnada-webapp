@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:auth": "node --env-file=.env scripts/sync-system-auth.mjs",
+    "migrate:product-images": "node --env-file=.env scripts/migrate-product-images-to-bucket.mjs",
+    "migrate:product-images:dry": "node --env-file=.env scripts/migrate-product-images-to-bucket.mjs --dry-run"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",

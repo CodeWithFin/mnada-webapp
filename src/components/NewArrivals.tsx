@@ -17,6 +17,46 @@ interface Product {
   isNew?: boolean;
 }
 
+const PRODUCT_PLACEHOLDER = '/assets/hero-image/product-placeholder.svg';
+const ALLOWED_IMAGE_HOSTS = new Set([
+  'images.unsplash.com',
+  'hoirqrkdgbmvpwutwuwj.supabase.co',
+  'dzgprvaijyrwprpaytht.supabase.co',
+  'rfqssdpejawljioljrvw.supabase.co',
+  'via.placeholder.com'
+]);
+
+function getSafeProductImageSrc(rawSrc: string) {
+  if (!rawSrc) {
+    return PRODUCT_PLACEHOLDER;
+  }
+
+  if (rawSrc.startsWith('/')) {
+    return rawSrc;
+  }
+
+  try {
+    const parsed = new URL(rawSrc);
+    if (parsed.protocol === 'https:' && ALLOWED_IMAGE_HOSTS.has(parsed.hostname)) {
+      return rawSrc;
+    }
+  } catch {
+    return PRODUCT_PLACEHOLDER;
+  }
+
+  return PRODUCT_PLACEHOLDER;
+}
+
+function normalizeCategory(value: string) {
+  return value.toLowerCase().trim();
+}
+
+function tabToCategory(tab: "All" | "Men's" | "Women's") {
+  if (tab === "Men's") return 'men';
+  if (tab === "Women's") return 'women';
+  return 'all';
+}
+
 export default function NewArrivals() {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,12 +68,14 @@ export default function NewArrivals() {
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('mock_id, name, price, image, category, is_new')
+        .select('id, mock_id, name, price, image, category, is_new')
+        .neq('category', 'SYSTEM_AUTH')
+        .order('created_at', { ascending: false })
         .limit(8);
         
       if (data && !error) {
         setProducts(data.map(p => ({
-          id: p.mock_id,
+          id: p.mock_id || p.id,
           name: p.name,
           price: Number(p.price),
           image: p.image,
@@ -49,10 +91,10 @@ export default function NewArrivals() {
 
   const filteredProducts = products.filter(product => {
     if (activeTab === "All") return true;
-    return product.category === activeTab;
+    return normalizeCategory(product.category) === tabToCategory(activeTab);
   });
 
-  const handleQuickAdd = (product: any) => {
+  const handleQuickAdd = (product: Product) => {
     setAddingId(product.id);
     addToCart({
       id: product.id,
@@ -132,7 +174,7 @@ export default function NewArrivals() {
                       <span className="absolute top-4 left-4 bg-[#a58c69] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 z-10 transition-transform group-hover:scale-110">New</span>
                     )}
                     <Image 
-                      src={product.image} 
+                      src={getSafeProductImageSrc(product.image)}
                       alt={product.name} 
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"

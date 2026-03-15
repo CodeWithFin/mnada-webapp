@@ -1,30 +1,24 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { findSystemUser, verifyRoleRequest } from '@/lib/systemAuth';
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Internal server error';
+}
 
 export async function PUT(request: Request) {
   try {
     const { currentUsername, currentPassword, newUsername, newPassword } = await request.json();
 
-    /*
-    // Verify auth token to ensure they are actually logged in as the user
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
-    } catch (e) {
+    const authUser = await verifyRoleRequest(request, 'admin');
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (decoded.username !== currentUsername) {
+    if (authUser.username !== currentUsername) {
       return NextResponse.json({ error: 'Unauthorized user alteration' }, { status: 403 });
     }
-    */
 
     if (!currentUsername || !currentPassword) {
       return NextResponse.json(
@@ -40,15 +34,9 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Fetch the current admin user to verify identity
-    const { data: adminUser, error } = await supabaseAdmin
-      .from('products')
-      .select('*')
-      .eq('category', 'SYSTEM_AUTH')
-      .eq('name', currentUsername)
-      .single();
+    const adminUser = await findSystemUser(currentUsername, 'admin');
 
-    if (error || !adminUser) {
+    if (!adminUser) {
       return NextResponse.json(
         { error: 'Invalid current credentials' },
         { status: 401 }
@@ -66,7 +54,7 @@ export async function PUT(request: Request) {
     }
 
     // Prepare update payload
-    const updates: any = {};
+    const updates: { name?: string; description?: string } = {};
     if (newUsername) {
       updates.name = newUsername;
     }
@@ -95,7 +83,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error('Settings update error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }

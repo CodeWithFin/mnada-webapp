@@ -1,25 +1,22 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
+import { verifyRoleRequest } from '@/lib/systemAuth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
-  /* 
-  const authHeader = req.headers.get('authorization');
-  // Simple  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const token = authHeader.split(' ')[1];
-  try {
-    jwt.verify(token, process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret');
-  } catch (e) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  */
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Internal server error';
+}
 
-  // Using the admin client to bypass the RLS policies so we can read all orders
+async function verifyAuth(req: Request) {
+  return Boolean(await verifyRoleRequest(req, 'admin'));
+}
+
+export async function GET(req: Request) {
+  if (!(await verifyAuth(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from('orders')
     .select(`
@@ -29,9 +26,47 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching orders:", error);
+    console.error('Error fetching orders:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json(data);
+}
+
+export async function PUT(req: Request) {
+  if (!(await verifyAuth(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { id, status } = await req.json();
+
+    if (!id || !status) {
+      return NextResponse.json({ error: 'Order ID and status are required' }, { status: 400 });
+    }
+
+    const allowedStatuses = ['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled'];
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Invalid order status' }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .select(`
+        *,
+        order_items (*)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error updating order:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
 }
