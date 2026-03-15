@@ -49,6 +49,7 @@ export default function Navbar() {
             <div className="nav_menu hidden lg:flex items-center gap-12 absolute left-1/2 transform -translate-x-1/2">
               <Link href="/mens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Mens</Link>
               <Link href="/womens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Womens</Link>
+              <Link href="/journal" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Journal</Link>
             </div>
 
             {/* Actions */}
@@ -94,6 +95,13 @@ export default function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Womens
+            </Link>
+            <Link
+              href="/journal"
+              className="hover:text-[#a58c69] transition-colors border-b border-[#e5e5e5] pb-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Journal
             </Link>
           </div>
 
