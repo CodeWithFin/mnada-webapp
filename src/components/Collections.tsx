@@ -36,7 +36,7 @@ export default function Collections() {
               <div className="collection-item_wrapper lg:col-span-3 flex flex-col gap-5 lg:gap-8 h-full">
                 <Link href="/mens" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
-                    src="https://images.unsplash.com/photo-1559561853-08451507cbe7?q=80&w=2003&auto=format&fit=crop" 
+                    src="https://images.unsplash.com/photo-1697748242500-9fb6828570ba?q=80&w=1200&auto=format&fit=crop" 
                     alt="Jackets"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
