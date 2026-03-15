@@ -1,8 +1,5 @@
 "use client";
 
-import AnnouncementBar from "@/components/AnnouncementBar";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
@@ -60,14 +57,16 @@ export default function CheckoutPage() {
         }),
       });
 
+      const payload = await response.json().catch(() => ({}));
+
       if (response.ok) {
         // Success logic: Clear cart and redirect or show success
         clearCart();
-        alert("Success! Your order has been placed. You will pay upon delivery/pickup. You will receive an SMS confirmation shortly.");
+        const orderRef = payload?.orderReference ? ` Order number: ${payload.orderReference}.` : '';
+        alert(`Success! Your order has been placed.${orderRef} You will pay upon delivery/pickup. You will receive an SMS confirmation shortly.`);
         router.push('/');
       } else {
-        const errBody = await response.json().catch(() => ({}));
-        const msg = errBody?.error || `Server error ${response.status}`;
+        const msg = payload?.error || `Server error ${response.status}`;
         console.error("Order API error:", msg);
         throw new Error(msg);
       }

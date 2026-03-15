@@ -5,6 +5,7 @@ import Marquee from "@/components/Marquee";
 import Collections from "@/components/Collections";
 import NewArrivals from "@/components/NewArrivals";
 import FeaturedStory from "@/components/FeaturedStory";
+import FeedbackSection from "@/components/FeedbackSection";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 
@@ -20,6 +21,7 @@ export default function Home() {
         <Collections />
         <NewArrivals />
         <FeaturedStory />
+        <FeedbackSection />
         <Newsletter />
       </main>
 
