@@ -12,8 +12,9 @@ export const revalidate = 60; // Revalidate cache every 60 seconds
 export default async function MensPage() {
   const { data: dbProducts, error } = await supabase
     .from('products')
-    .select('mock_id, name, price, image, is_new')
-    .eq('category', "Men's");
+    .select('id, mock_id, name, price, image, is_new, category')
+    .neq('category', 'SYSTEM_AUTH')
+    .eq('category', 'men');
     
   if (error) {
     console.error('Error fetching mens products:', error);
@@ -21,7 +22,7 @@ export default async function MensPage() {
 
   // Map purely to ensure frontend components get expected ID format
   const mensProducts = dbProducts?.map(p => ({
-    id: p.mock_id,
+    id: p.mock_id || p.id,
     name: p.name,
     price: Number(p.price),
     image: p.image,

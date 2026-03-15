@@ -63,14 +63,17 @@ export default function CheckoutPage() {
       if (response.ok) {
         // Success logic: Clear cart and redirect or show success
         clearCart();
-        alert("Success! Your order has been placed. You will pay upon delivery/pickup. Check your email for confirmation.");
+        alert("Success! Your order has been placed. You will pay upon delivery/pickup. You will receive an SMS confirmation shortly.");
         router.push('/');
       } else {
-        throw new Error("Failed to send confirmation email.");
+        const errBody = await response.json().catch(() => ({}));
+        const msg = errBody?.error || `Server error ${response.status}`;
+        console.error("Order API error:", msg);
+        throw new Error(msg);
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      alert("Something went wrong. Please try again.");
+      alert(`Something went wrong: ${error instanceof Error ? error.message : "Please try again."}`);
     } finally {
       setIsProcessing(false);
     }

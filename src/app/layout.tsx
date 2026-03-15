@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${spaceMono.variable} antialiased selection:bg-[#a58c69] selection:text-white font-[family-name:var(--font-space-mono)]`}>
         <CartProvider>
           {children}

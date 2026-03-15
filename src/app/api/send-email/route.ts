@@ -1,13 +1,15 @@
-import { resend } from "@/lib/resend";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendSMS } from "@/lib/tilil";
+
+const OWNER_PHONE = "0746551520";
 
 export async function POST(req: Request) {
   try {
     const { customer, orderDetails, subtotal, shipping, total } = await req.json();
 
     // 1. Insert Order into Database
-    const { data: orderData, error: orderError } = await supabase
+    const { data: orderData, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
         customer_email: customer.email,
@@ -20,7 +22,7 @@ export async function POST(req: Request) {
         customer_phone: customer.phone,
         subtotal: subtotal,
         shipping_cost: shipping,
-        total: total.toString() // stored as text per schema
+        total: total.toString()
       })
       .select('id')
       .single();
@@ -40,48 +42,49 @@ export async function POST(req: Request) {
       size: item.size
     }));
 
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItemsToInsert);
 
     if (itemsError) {
       console.error("Failed to insert order items:", itemsError);
-      // We don't fail the whole request here, but it's bad.
     }
 
-    // 3. Send Confirmation Email
-    const data = await resend.emails.send({
-      from: 'Mnada <onboarding@resend.dev>', // Update this later if you have a custom domain
-      to: [customer.email],
-      subject: 'Order Confirmation - Mnada',
-      html: `
-        <div style="font-family: monospace; padding: 20px; color: #1c1a19;">
-          <h1 style="text-transform: uppercase; letter-spacing: 2px;">Order Confirmed</h1>
-          <p>Thank you for your order from Mnada.</p>
-          <p style="background-color: #f8f8f8; padding: 10px; border-left: 3px solid #a58c69;">
-            <strong>Payment Status: Pending</strong><br/>
-            We have received your order. We will follow up with you shortly to arrange for physical payment and delivery.
-          </p>
-          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;" />
-          <h3 style="text-transform: uppercase;">Order Summary</h3>
-          <ul style="list-style: none; padding: 0;">
-            ${orderDetails.map((item: any) => `
-              <li style="margin-bottom: 10px;">
-                <strong>${item.name}</strong> x ${item.quantity} - KSh ${item.price.toFixed(2)}
-              </li>
-            `).join('')}
-          </ul>
-          <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;" />
-          <p style="font-size: 18px;"><strong>Total: KSh ${total.toFixed(2)}</strong></p>
-          <p style="font-size: 10px; color: #999; margin-top: 40px;">
-            Est. 2025 • Nakuru, Kenya
-          </p>
-        </div>
-      `,
+    // 3. Send SMS notifications
+    const totalNum = parseFloat(total);
+    const totalFormatted = isNaN(totalNum) ? String(total) : totalNum.toFixed(2);
+
+    const itemsSummary = orderDetails
+      .map((item: any) => `${item.name} x${item.quantity}`)
+      .join(", ");
+
+    const smsPromises: Promise<void>[] = [];
+
+    // SMS to customer (only if they provided a phone number)
+    if (customer.phone) {
+      const customerMsg =
+        `Hello ${customer.firstName}, your Mnada order #${orderData.id} has been received! ` +
+        `Total: KSh ${totalFormatted}. We will contact you to arrange payment & delivery. Thank you!`;
+      smsPromises.push(sendSMS(customer.phone, customerMsg));
+    }
+
+    // SMS to owner
+    const ownerMsg =
+      `New Mnada order #${orderData.id} from ${customer.firstName} ${customer.lastName}` +
+      (customer.phone ? ` (${customer.phone})` : "") +
+      `. Items: ${itemsSummary}. Total: KSh ${totalFormatted}.`;
+    smsPromises.push(sendSMS(OWNER_PHONE, ownerMsg));
+
+    const smsResults = await Promise.allSettled(smsPromises);
+    smsResults.forEach((result, i) => {
+      if (result.status === "rejected") {
+        console.error(`SMS [${i}] failed:`, result.reason);
+      }
     });
 
-    return NextResponse.json(data);
+    return NextResponse.json({ success: true, orderId: orderData.id });
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    console.error("Order error:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

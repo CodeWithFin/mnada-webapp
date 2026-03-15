@@ -19,6 +19,18 @@ interface ProductDetails {
   materials: string;
   fit: string;
   sizes: string[];
+  category: string;
+}
+
+function getCategoryCrumb(category: string) {
+  const normalized = category.toLowerCase().trim();
+  if (normalized === 'women') {
+    return { href: '/womens', label: "Women's" };
+  }
+  if (normalized === 'men') {
+    return { href: '/mens', label: "Men's" };
+  }
+  return { href: '/mens', label: 'Shop' };
 }
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,22 +45,47 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('mock_id', id)
         .single();
 
+      if (error || !data) {
+        const fallback = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        data = fallback.data;
+        error = fallback.error;
+      }
+
       if (data && !error) {
+        let galleryImages = [data.image];
+        let cleanDescription = data.description || "";
+
+        if (data.description && data.description.includes("---GALLERY_DATA---")) {
+          const parts = data.description.split("---GALLERY_DATA---");
+          cleanDescription = parts[0].trim();
+          try {
+            galleryImages = JSON.parse(parts[1]);
+          } catch (e) {
+            console.error("Error parsing gallery data:", e);
+          }
+        }
+
         setProduct({
-          id: data.mock_id,
+          id: data.mock_id || data.id,
           name: data.name,
           price: Number(data.price),
-          description: data.description || "No description provided.",
-          images: [data.image], // Mapping single DB image to array format required by UI
+          description: cleanDescription || "No description provided.",
+          images: galleryImages, 
           materials: data.materials || "Premium materials.",
           fit: data.fit || "True to size.",
-          sizes: data.sizes || ['S', 'M', 'L', 'XL']
+          sizes: data.sizes || ['S', 'M', 'L', 'XL'],
+          category: data.category || ''
         });
       }
       setIsLoading(false);
@@ -95,6 +132,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     );
   }
 
+  const categoryCrumb = getCategoryCrumb(product.category);
+
   return (
     <div className="page-wrapper flex flex-col min-h-screen bg-white">
       <AnnouncementBar />
@@ -107,7 +146,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="container-large max-w-[1792px] mx-auto flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono text-[#666]">
             <Link href="/" className="hover:text-[#1c1a19] transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/mens" className="hover:text-[#1c1a19] transition-colors">Mens</Link>
+            <Link href={categoryCrumb.href} className="hover:text-[#1c1a19] transition-colors">{categoryCrumb.label}</Link>
             <span>/</span>
             <span className="text-[#1c1a19]">{product.name}</span>
           </div>
@@ -141,6 +180,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         fill
                         className="object-cover transition-opacity duration-300"
                         priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                       />
                     </div>
                     
@@ -166,9 +206,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         >
                           <Image 
                             src={img}
-                            alt={`Preview ${idx + 1}`}
+                            alt={`${product.name} Preview ${idx + 1}`}
                             fill
                             className="object-cover"
+                            sizes="80px"
                           />
                         </button>
                       ))}

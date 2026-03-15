@@ -12,15 +12,16 @@ export const revalidate = 60; // Revalidate cache every 60 seconds
 export default async function WomensPage() {
   const { data: dbProducts, error } = await supabase
     .from('products')
-    .select('mock_id, name, price, image, is_new')
-    .eq('category', "Women's");
+    .select('id, mock_id, name, price, image, is_new, category')
+    .neq('category', 'SYSTEM_AUTH')
+    .eq('category', 'women');
     
   if (error) {
     console.error('Error fetching womens products:', error);
   }
 
   const womensProducts = dbProducts?.map(p => ({
-    id: p.mock_id,
+    id: p.mock_id || p.id,
     name: p.name,
     price: Number(p.price),
     image: p.image,

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="Product image placeholder">
+  <rect width="1200" height="1500" fill="#f3eee5" />
+  <rect x="80" y="80" width="1040" height="1340" fill="#e6ddcf" stroke="#b8ab95" stroke-width="4" />
+  <text x="600" y="720" text-anchor="middle" font-family="Georgia, serif" font-size="56" fill="#5a4b35">Image unavailable</text>
+  <text x="600" y="790" text-anchor="middle" font-family="Georgia, serif" font-size="38" fill="#7a6a53">MNADA</text>
+</svg>
