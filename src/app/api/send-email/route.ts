@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Send SMS notifications
-    const totalNum = parseFloat(total);
+    const totalNum = parseFloat(String(total));
     const totalFormatted = isNaN(totalNum) ? String(total) : totalNum.toFixed(2);
 
     const itemsSummary = orderDetails
