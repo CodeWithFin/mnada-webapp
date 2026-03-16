@@ -9,7 +9,8 @@
     "lint": "eslint",
     "sync:auth": "node --env-file=.env scripts/sync-system-auth.mjs",
     "migrate:product-images": "node --env-file=.env scripts/migrate-product-images-to-bucket.mjs",
-    "migrate:product-images:dry": "node --env-file=.env scripts/migrate-product-images-to-bucket.mjs --dry-run"
+    "migrate:product-images:dry": "node --env-file=.env scripts/migrate-product-images-to-bucket.mjs --dry-run",
+    "backfill:order-phones": "node --env-file=.env scripts/backfill-order-phones.mjs"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
