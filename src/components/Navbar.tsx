@@ -57,9 +57,9 @@ export default function Navbar() {
               <button className="nav_search text-[#1c1a19] hover:text-[#a58c69] transition-colors hidden md:block">
                 <Icon icon="lucide:search" width="18" strokeWidth="1.5" />
               </button>
-              <button className="nav_account text-[#1c1a19] hover:text-[#a58c69] transition-colors">
+              <Link href="/account" className="nav_account text-[#1c1a19] hover:text-[#a58c69] transition-colors">
                 <Icon icon="lucide:user" width="18" strokeWidth="1.5" />
-              </button>
+              </Link>
               <Link href="/cart" className="nav_cart text-[#1c1a19] hover:text-[#a58c69] transition-colors relative">
                 <Icon icon="lucide:shopping-bag" width="18" strokeWidth="1.5" />
                 {mounted && totalItems > 0 && (
@@ -106,10 +106,10 @@ export default function Navbar() {
           </div>
 
           <div className="mt-auto flex flex-col gap-6 pt-10">
-            <div className="flex items-center gap-4 text-[#1c1a19]">
+            <Link href="/account" className="flex items-center gap-4 text-[#1c1a19]" onClick={() => setIsMobileMenuOpen(false)}>
               <Icon icon="lucide:user" width="20" strokeWidth="1.5" />
               <span className="text-sm font-mono uppercase tracking-widest">Account</span>
-            </div>
+            </Link>
             <div className="flex items-center gap-4 text-[#1c1a19]">
               <Icon icon="lucide:search" width="20" strokeWidth="1.5" />
               <span className="text-sm font-mono uppercase tracking-widest">Search</span>
