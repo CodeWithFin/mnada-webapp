@@ -2,13 +2,7 @@
  * Sends an SMS via the Tilil Tech SMS gateway.
  * Phone numbers are normalised to the 254XXXXXXXXX format automatically.
  */
-
-function normalisePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("254")) return digits;
-  if (digits.startsWith("0")) return "254" + digits.slice(1);
-  return digits;
-}
+import { normalizePhone } from "@/lib/phone";
 
 export async function sendSMS(mobile: string, message: string): Promise<void> {
   const apiKey = process.env.TILIL_API_KEY;
@@ -23,13 +17,13 @@ export async function sendSMS(mobile: string, message: string): Promise<void> {
   const payload = {
     api_key: apiKey,
     service_id: 0,
-    mobile: normalisePhone(mobile),
+    mobile: normalizePhone(mobile),
     response_type: "json",
     shortcode: shortcode,
     message: message,
   };
 
-  console.log("Tilil SMS: sending to", normalisePhone(mobile), "| payload:", JSON.stringify(payload));
+  console.log("Tilil SMS: sending to", normalizePhone(mobile), "| payload:", JSON.stringify(payload));
 
   const res = await fetch(endpoint, {
     method: "POST",
