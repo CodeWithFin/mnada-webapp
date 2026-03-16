@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendSMS } from "@/lib/tilil";
 import { getOrderReference } from "@/lib/orderReference";
+import { normalizePhone } from "@/lib/phone";
 
 const OWNER_PHONE = "0746551520";
 
@@ -40,6 +41,8 @@ export async function POST(req: Request) {
       total: number | string;
     } = await req.json();
 
+    const normalizedPhone = normalizePhone(customer.phone);
+
     // 1. Insert Order into Database
     const { data: orderData, error: orderError } = await supabaseAdmin
       .from('orders')
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
         shipping_apartment: customer.apartment || null,
         shipping_city: customer.city,
         shipping_postal_code: customer.postalCode,
-        customer_phone: customer.phone,
+        customer_phone: normalizedPhone,
         subtotal: subtotal,
         shipping_cost: shipping,
         total: total.toString()
@@ -94,17 +97,17 @@ export async function POST(req: Request) {
     const orderReference = getOrderReference(orderData);
 
     // SMS to customer (only if they provided a phone number)
-    if (customer.phone) {
+    if (normalizedPhone) {
       const customerMsg =
         `Hello ${customer.firstName}, your Mnada order ${orderReference} has been received! ` +
         `Total: KSh ${totalFormatted}. We will contact you to arrange payment & delivery. Thank you!`;
-      smsPromises.push(sendSMS(customer.phone, customerMsg));
+      smsPromises.push(sendSMS(normalizedPhone, customerMsg));
     }
 
     // SMS to owner
     const ownerMsg =
       `New Mnada order ${orderReference} from ${customer.firstName} ${customer.lastName}` +
-      (customer.phone ? ` (${customer.phone})` : "") +
+      (normalizedPhone ? ` (${normalizedPhone})` : "") +
       `. Items: ${itemsSummary}. Total: KSh ${totalFormatted}.`;
     smsPromises.push(sendSMS(OWNER_PHONE, ownerMsg));
 
