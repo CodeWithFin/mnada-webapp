@@ -6,12 +6,16 @@ import { Icon } from "@iconify/react";
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { normalizePhone } from "@/lib/phone";
 
 export default function CheckoutPage() {
   const { cartItems, subtotal, clearCart } = useCart();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGoogleAuthLoading, setIsGoogleAuthLoading] = useState(false);
+  const [authUser, setAuthUser] = useState<{ email?: string; name?: string } | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -78,8 +82,80 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleAuthLoading(true);
+
+    try {
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/checkout` : undefined;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error("Checkout Google auth error:", error);
+      alert(`Google sign in failed: ${error instanceof Error ? error.message : "Please try again."}`);
+      setIsGoogleAuthLoading(false);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
+
+    const hydrateAccount = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user) return;
+
+      const user = session.user;
+      const metadata = (user.user_metadata || {}) as Record<string, unknown>;
+      const firstName = String(metadata.firstName || metadata.given_name || "");
+      const lastName = String(metadata.lastName || metadata.family_name || "");
+      const fullName = [firstName, lastName].filter(Boolean).join(" ");
+
+      setAuthUser({ email: user.email || "", name: fullName || user.email || "" });
+
+      // Base fields from auth
+      setFormData((prev) => ({
+        ...prev,
+        email: prev.email || user.email || "",
+        phone: prev.phone || normalizePhone(user.phone || ""),
+        firstName: prev.firstName || firstName,
+        lastName: prev.lastName || lastName,
+      }));
+
+      // Shipping details from saved profile
+      try {
+        const res = await fetch("/api/client/profile", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const profile = await res.json();
+          setFormData((prev) => ({
+            ...prev,
+            firstName: prev.firstName || profile.first_name || "",
+            lastName: prev.lastName || profile.last_name || "",
+            phone: prev.phone || profile.shipping_phone || "",
+            address: prev.address || profile.shipping_address || "",
+            apartment: prev.apartment || profile.shipping_apartment || "",
+            city: prev.city || profile.shipping_city || "",
+            postalCode: prev.postalCode || profile.shipping_postal_code || "",
+          }));
+        }
+      } catch {
+        // non-blocking
+      }
+    };
+
+    hydrateAccount();
   }, []);
 
   if (!mounted) {
@@ -131,8 +207,26 @@ export default function CheckoutPage() {
                 <section className="flex flex-col gap-6">
                   <div className="flex justify-between items-end border-b border-[#1c1a19] pb-2">
                     <h2 className="text-xl font-bold uppercase tracking-widest text-[#1c1a19]">Contact</h2>
-                    <span className="text-xs font-mono text-gray-500">Have an account? <Link href="#" className="text-[#a58c69] hover:underline">Log in</Link></span>
+                    {!authUser ? (
+                      <span className="text-xs font-mono text-gray-500">Have an account? <Link href="/account" className="text-[#a58c69] hover:underline">Log in</Link></span>
+                    ) : (
+                      <span className="text-xs font-mono text-gray-500 flex items-center gap-1.5">
+                        <Icon icon="lucide:circle-check" width="13" className="text-green-600" />
+                        Signed in as <span className="text-[#1c1a19] font-bold">{authUser.name}</span>
+                      </span>
+                    )}
                   </div>
+                  {!authUser && (
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isGoogleAuthLoading}
+                    className="h-12 border border-[#1c1a19] bg-white text-[#1c1a19] font-bold uppercase tracking-widest text-xs hover:bg-[#1c1a19] hover:text-white transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  >
+                    <Icon icon="logos:google-icon" width="16" />
+                    {isGoogleAuthLoading ? "Redirecting..." : "Continue with Google"}
+                  </button>
+                  )}
                   <input 
                     type="email" 
                     name="email"
