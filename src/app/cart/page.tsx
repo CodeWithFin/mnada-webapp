@@ -49,7 +49,7 @@ export default function CartPage() {
                 <Icon icon="lucide:shopping-bag" width="64" className="text-gray-200 mb-2" />
                 <div className="text-xl font-mono uppercase tracking-widest text-gray-400">Your cart is empty</div>
                 <Link 
-                  href="/mens" 
+                  href="/" 
                   className="px-10 h-14 bg-[#1c1a19] text-white font-bold uppercase text-xs tracking-widest hover:bg-[#a58c69] transition-colors flex items-center justify-center"
                 >
                   Start Shopping
@@ -133,7 +133,7 @@ export default function CartPage() {
                     <Icon icon="lucide:arrow-right" className="ml-2 group-hover:translate-x-1 transition-transform" />
                   </Link>
 
-                  <Link href="/mens" className="text-center text-xs font-mono uppercase tracking-widest text-gray-500 hover:text-[#1c1a19] underline decoration-1 underline-offset-4 transition-colors">
+                  <Link href="/" className="text-center text-xs font-mono uppercase tracking-widest text-gray-500 hover:text-[#1c1a19] underline decoration-1 underline-offset-4 transition-colors">
                     Continue Shopping
                   </Link>
                 </div>
