@@ -214,6 +214,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <Link
+            href="/admin/journal"
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname.startsWith("/admin/journal") ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
+          >
+            <Icon icon="lucide:book-open" width="18" /> Journal
+          </Link>
+
+          <Link
             href="/admin/settings"
             className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === "/admin/settings" ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
           >
