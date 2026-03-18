@@ -395,7 +395,7 @@ export default function AccountPage() {
                 <Icon icon="lucide:package-open" width="30" className="text-gray-300" />
                 <p className="font-mono text-sm text-gray-500">No orders found for this account yet.</p>
                 <Link
-                  href="/mens"
+                  href="/"
                   className="h-10 px-4 inline-flex items-center border border-[#1c1a19] text-[#1c1a19] text-xs font-bold uppercase tracking-widest hover:bg-[#1c1a19] hover:text-white transition-colors"
                 >
                   Start Shopping

@@ -24,7 +24,10 @@ export async function GET(req: Request) {
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: userResult, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !userResult?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (userError || !userResult?.user) {
+    console.error("Auth verification failed in /api/client/profile:", userError?.message || "No user found");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("customer_profiles")
@@ -44,7 +47,10 @@ export async function PUT(req: Request) {
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: userResult, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !userResult?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (userError || !userResult?.user) {
+    console.error("Auth verification failed in /api/client/profile:", userError?.message || "No user found");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const body: ProfilePayload = await req.json();
 

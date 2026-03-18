@@ -69,7 +69,7 @@ export default function Collections() {
               {/* Tall Item */}
               <Link href="/womens" className="collection-item_tall group relative lg:col-span-3 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
-                  src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?q=80&w=1995&auto=format&fit=crop" 
+                  src="https://images.unsplash.com/photo-1538329972958-465d6d2144ed?q=80&w=2340&auto=format&fit=crop" 
                   alt="Womens Collection"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

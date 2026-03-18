@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendSMS } from "@/lib/tilil";
 import { getOrderReference } from "@/lib/orderReference";
 import { normalizePhone } from "@/lib/phone";
+import { resend } from "@/lib/resend";
 
 const OWNER_PHONE = "0746551520";
 
@@ -118,9 +119,51 @@ export async function POST(req: Request) {
       }
     });
 
+    // 4. Send Confirmation Email via Resend
+    try {
+      console.log("Attempting to send email to:", customer.email);
+      const { data: emailData, error: emailError } = await resend.emails.send({
+        from: 'Mnada <onboarding@resend.dev>', // Update this later if you have a custom domain
+        to: [customer.email],
+        subject: `Order Confirmation - ${orderReference}`,
+        html: `
+          <div style="font-family: monospace; padding: 20px; color: #1c1a19;">
+            <h2 style="text-transform: uppercase; border-bottom: 2px solid #1c1a19; padding-bottom: 10px;">MNADA</h2>
+            <p>Hello ${customer.firstName},</p>
+            <p>Thank you for your purchase from Mnada. Your order <strong>${orderReference}</strong> has been received.</p>
+            <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;" />
+            <h3 style="text-transform: uppercase;">Order Summary</h3>
+            <ul style="list-style: none; padding: 0;">
+              ${orderDetails.map((item) => `
+                <li style="margin-bottom: 10px;">
+                  <strong>${item.name}</strong> x ${item.quantity} - KSh ${item.price.toFixed(2)}
+                </li>
+              `).join('')}
+            </ul>
+            <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 20px 0;" />
+            <p style="font-size: 18px;"><strong>Total: KSh ${totalFormatted}</strong></p>
+            <p style="margin-top: 20px;">We will contact you shortly to arrange payment and delivery.</p>
+            <p style="font-size: 10px; color: #999; margin-top: 40px;">
+              Est. 2025 • Nakuru, Kenya
+            </p>
+          </div>
+        `,
+      });
+
+      if (emailError) {
+        console.error("Resend API rejected the request:", emailError);
+      } else {
+        console.log("Resend API accepted the request. Email ID:", emailData?.id);
+      }
+    } catch (err) {
+      console.error("Critical error in Resend integration:", err);
+      // Don't fail the whole request if email fails
+    }
+
     return NextResponse.json({ success: true, orderId: orderData.id, orderReference });
   } catch (error) {
     console.error("Order error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
+
