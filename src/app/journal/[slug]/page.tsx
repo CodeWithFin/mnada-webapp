@@ -1,25 +1,74 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getJournalPostBySlug, journalPosts } from "@/lib/journalPosts";
+import { use } from "react";
 
-export function generateStaticParams() {
-  return journalPosts.map((post) => ({ slug: post.slug }));
+interface JournalPost {
+  title: string;
+  excerpt: string;
+  image: string;
+  tag: string;
+  date: string;
+  read_time: string;
+  content: string[];
 }
 
-export default async function JournalPostPage({
+export default function JournalPostPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const post = getJournalPostBySlug(slug);
+  const { slug } = use(params);
+  const [post, setPost] = useState<JournalPost | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await fetch(`/api/client/journal?slug=${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPost(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch journal post:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPost();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white">
+        <AnnouncementBar />
+        <Navbar />
+        <main className="main-wrapper flex-grow flex items-center justify-center py-20">
+          <div className="animate-pulse font-mono text-xs uppercase tracking-widest text-gray-400">Loading Story...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
-    notFound();
+    return (
+      <div className="page-wrapper flex flex-col min-h-screen bg-white">
+        <AnnouncementBar />
+        <Navbar />
+        <main className="main-wrapper flex-grow flex flex-col items-center justify-center py-20 gap-4">
+          <p className="font-mono text-xs uppercase tracking-widest text-gray-400">Story not found</p>
+          <Link href="/journal" className="text-xs font-bold uppercase tracking-widest underline underline-offset-4">Back to Journal</Link>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -44,7 +93,7 @@ export default async function JournalPostPage({
                 {post.title}
               </h1>
               <p className="text-xs font-mono uppercase tracking-widest text-gray-500 mt-4">
-                {post.date} • {post.readTime}
+                {post.date} • {post.read_time}
               </p>
             </div>
           </div>
