@@ -16,9 +16,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const pathname = usePathname();
+
 
   const fetchCategories = async () => {
     try {
@@ -129,17 +131,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 relative">
               <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
-                autoComplete="current-password"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1c1a19]"
+                >
+                  <Icon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} width="20" />
+                </button>
+              </div>
             </div>
+
 
             <button
               type="submit"

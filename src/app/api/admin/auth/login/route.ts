@@ -22,8 +22,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare the provided password with the hashed password (stored in description)
     const isPasswordValid = await bcrypt.compare(password, adminUser.description);
+
+
 
     if (!isPasswordValid) {
       return NextResponse.json(
