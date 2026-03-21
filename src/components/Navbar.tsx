@@ -103,18 +103,22 @@ export default function Navbar() {
             >
               Journal
             </Link>
+            <Link 
+              href="/account"
+              className="hover:text-[#a58c69] transition-colors border-b border-[#e5e5e5] pb-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Account
+            </Link>
+            <Link 
+              href="/seller/signup"
+              className="text-[#a58c69] hover:text-[#1c1a19] transition-colors border-b border-[#e5e5e5] pb-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Become a Seller
+            </Link>
           </div>
 
-          <div className="mt-auto flex flex-col gap-6 pt-10">
-            <Link href="/account" className="flex items-center gap-4 text-[#1c1a19]" onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon icon="lucide:user" width="20" strokeWidth="1.5" />
-              <span className="text-sm font-mono uppercase tracking-widest">Account</span>
-            </Link>
-            <div className="flex items-center gap-4 text-[#1c1a19]">
-              <Icon icon="lucide:search" width="20" strokeWidth="1.5" />
-              <span className="text-sm font-mono uppercase tracking-widest">Search</span>
-            </div>
-          </div>
         </div>
       </div>
     </nav>
