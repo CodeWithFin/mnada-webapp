@@ -36,6 +36,9 @@ export default function AdminJournalPage() {
     content: "", // Will be converted to array
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const fetchPosts = async () => {
     setIsLoading(true);
     const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
@@ -73,6 +76,18 @@ export default function AdminJournalPage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleEditClick = (post: JournalPost) => {
     setEditingPostId(post.id);
     setFormData({
@@ -86,6 +101,8 @@ export default function AdminJournalPage() {
       is_featured: post.is_featured,
       content: post.content.join("\n\n"),
     });
+    setImagePreview(post.image);
+    setSelectedFile(null);
     setIsModalOpen(true);
   };
 
@@ -102,6 +119,8 @@ export default function AdminJournalPage() {
       is_featured: false,
       content: "",
     });
+    setSelectedFile(null);
+    setImagePreview(null);
     setIsModalOpen(false);
   };
 
@@ -111,20 +130,37 @@ export default function AdminJournalPage() {
     const authHeader = `Bearer ${localStorage.getItem('mnada_admin_token')}`;
 
     try {
-      const payload = {
-        ...formData,
-        id: editingPostId,
-        content: formData.content.split("\n\n").filter(p => p.trim() !== ""),
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("slug", formData.slug);
+      formDataToSend.append("excerpt", formData.excerpt);
+      formDataToSend.append("tag", formData.tag);
+      formDataToSend.append("date", formData.date);
+      formDataToSend.append("read_time", formData.read_time);
+      formDataToSend.append("is_featured", String(formData.is_featured));
+      formDataToSend.append("content", JSON.stringify(formData.content.split("\n\n").filter(p => p.trim() !== "")));
+      
+      if (editingPostId) {
+        formDataToSend.append("id", editingPostId);
+      }
+      
+      if (selectedFile) {
+        formDataToSend.append("image", selectedFile);
+      } else if (editingPostId && formData.image) {
+        formDataToSend.append("existingImage", formData.image);
+      } else if (!editingPostId) {
+        alert("Please upload an image");
+        setIsSaving(false);
+        return;
+      }
 
       const method = editingPostId ? "PUT" : "POST";
       const res = await fetch("/api/admin/journal", {
         method,
         headers: {
-          "Content-Type": "application/json",
           "Authorization": authHeader,
         },
-        body: JSON.stringify(payload),
+        body: formDataToSend,
       });
 
       if (res.ok) {
@@ -261,16 +297,39 @@ export default function AdminJournalPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Image URL *</label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19]"
-                  required
-                />
+              <div className="flex flex-col gap-4">
+                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Image *</label>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="relative w-full md:w-48 aspect-[1.5] bg-[#f8f8f8] border border-dashed border-[#e5e5e5] h-32 flex items-center justify-center overflow-hidden">
+                    {imagePreview ? (
+                      <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-gray-400">
+                        <Icon icon="lucide:image" width="24" />
+                        <span className="text-[10px] uppercase font-mono">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 w-full">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="blog-image-upload"
+                    />
+                    <label
+                      htmlFor="blog-image-upload"
+                      className="h-12 border border-[#1c1a19] px-6 font-bold uppercase tracking-widest text-[10px] flex items-center justify-center cursor-pointer hover:bg-[#1c1a19] hover:text-white transition-colors gap-2"
+                    >
+                      <Icon icon="lucide:upload" width="14" />
+                      {imagePreview ? "Change Image" : "Upload Image"}
+                    </label>
+                    <p className="text-[10px] text-gray-400 mt-2 font-mono uppercase tracking-widest">
+                      Recommended size: 1200x800px. JPG, PNG or WebP.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">
