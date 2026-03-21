@@ -7,7 +7,8 @@ import Link from "next/link";
 interface Stats {
   summary: {
     totalRevenue: number;
-    totalPotentialProfit: number;
+    earnedProfit: number;
+    potentialProfit: number;
     salesCount: number;
     productCount: number;
     commissionRate: number;
@@ -56,10 +57,16 @@ export default function SellerDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
+          title="Earned Profit" 
+          value={`KSh ${(stats?.summary?.earnedProfit || 0).toLocaleString()}`} 
+          icon="lucide:banknote" 
+          detail="Profit from delivered orders"
+        />
+        <StatCard 
           title="Potential Profit" 
-          value={`KSh ${(stats?.summary?.totalPotentialProfit || 0).toLocaleString()}`} 
+          value={`KSh ${(stats?.summary?.potentialProfit || 0).toLocaleString()}`} 
           icon="lucide:wallet" 
-          detail={`After ${(stats?.summary?.commissionRate || 0) * 100}% commission`}
+          detail={`Processing (${(stats?.summary?.commissionRate || 0) * 100}% comm.)`}
         />
         <StatCard 
           title="Total Revenue" 
