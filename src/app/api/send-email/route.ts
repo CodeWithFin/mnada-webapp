@@ -28,6 +28,7 @@ type CheckoutOrderItem = {
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
     const {
       customer,
       orderDetails,
@@ -35,14 +36,14 @@ export async function POST(req: Request) {
       shipping,
       discount,
       total
-    }: {
+    } = body as {
       customer: CheckoutCustomer;
       orderDetails: CheckoutOrderItem[];
       subtotal: number;
       shipping: number;
       discount?: { codeId: string; code: string; amount: number } | null;
       total: number | string;
-    } = await req.json();
+    };
 
     const normalizedPhone = normalizePhone(customer.phone);
 
