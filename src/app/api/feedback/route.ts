@@ -103,38 +103,32 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    // 1. Try fetching from the proper feedback table
+    // 1. Fetch from the proper feedback table
     const { data: feedbackData, error: feedbackError } = await supabaseAdmin
       .from('feedback')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!feedbackError && feedbackData) {
-      return NextResponse.json(feedbackData);
-    }
+    const properFeedback = feedbackError ? [] : (feedbackData || []);
 
-    // 2. Fallback: Fetch from products table where category is SYSTEM_AUTH
+    // 2. Fetch from products table fallback
     const { data: productsData, error: productsError } = await supabaseAdmin
       .from('products')
       .select('description, created_at')
       .eq('category', SYSTEM_AUTH_CATEGORY)
       .order('created_at', { ascending: false });
 
-    if (productsError) {
-      return NextResponse.json([]); // Return empty if neither exists
-    }
-
-    // Parse the JSON strings from the products table
-    const parsedFeedback = productsData
+    const fallbackFeedback = productsError ? [] : (productsData || [])
       .map(item => {
         try {
           const parsed = JSON.parse(item.description);
           if (parsed.type === 'feedback') {
             return {
-              id: item.created_at, // Use created_at as a pseudo-id
+              id: item.created_at,
               name: parsed.name,
               message: parsed.message,
-              created_at: parsed.created_at || item.created_at
+              created_at: parsed.created_at || item.created_at,
+              status: 'approved' // Consider fallback items as approved
             };
           }
           return null;
@@ -144,7 +138,11 @@ export async function GET() {
       })
       .filter(Boolean);
 
-    return NextResponse.json(parsedFeedback);
+    // 3. Merge and Sort
+    const merged = [...properFeedback, ...fallbackFeedback]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return NextResponse.json(merged);
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
