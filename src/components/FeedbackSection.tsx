@@ -61,7 +61,7 @@ export default function FeedbackSection() {
       setForm({ name: '', email: '', phone: '', message: '' });
       
       // Refresh feedbacks
-      const freshRes = await fetch('/api/feedback');
+      const freshRes = await fetch(`/api/feedback?t=${Date.now()}`);
       if (freshRes.ok) {
         const freshData = await freshRes.json();
         setFeedbacks(freshData);
