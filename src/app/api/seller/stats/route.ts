@@ -14,12 +14,15 @@ export async function GET(req: Request) {
     // 1. Get seller's products
     const { data: products, error: pError } = await supabaseAdmin
       .from('products')
-      .select('id, name, price, seller_id')
+      .select('id, name, price, seller_id, mock_id')
       .eq('seller_id', sellerPayload.id);
 
     if (pError) throw pError;
 
-    const productIds = products.map(p => p.id);
+    const productIds = [
+      ...products.map(p => p.id),
+      ...products.map(p => p.mock_id).filter(Boolean)
+    ];
 
     // 2. Get seller's commission rate
     const { data: seller, error: sError } = await supabaseAdmin
@@ -56,7 +59,7 @@ export async function GET(req: Request) {
       .map((item: any) => ({
         id: item.id,
         order_id: item.order_id,
-        product_name: products.find(p => p.id === item.product_id)?.name || 'Unknown Product',
+        product_name: products.find(p => p.id === item.product_id || p.mock_id === item.product_id)?.name || 'Unknown Product',
         quantity: item.quantity,
         total: item.unit_price * item.quantity,
         status: item.orders?.status || 'unknown',

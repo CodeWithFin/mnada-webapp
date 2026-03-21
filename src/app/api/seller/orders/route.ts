@@ -14,11 +14,14 @@ export async function GET(req: Request) {
     // 1. Get seller's products
     const { data: products, error: pError } = await supabaseAdmin
       .from('products')
-      .select('id, name')
+      .select('id, name, mock_id')
       .eq('seller_id', sellerPayload.id);
 
     if (pError) throw pError;
-    const productIds = products.map(p => p.id);
+    const productIds = [
+      ...products.map(p => p.id),
+      ...products.map(p => p.mock_id).filter(Boolean)
+    ];
 
     // 2. Get order items for these products, including order details
     const { data: orderItems, error: oError } = await supabaseAdmin
@@ -36,7 +39,7 @@ export async function GET(req: Request) {
     // We'll return the items with their order context
     const formattedOrders = orderItems.map((item: any) => ({
       ...item,
-      product_name: products.find(p => p.id === item.product_id)?.name || 'Unknown Product',
+      product_name: products.find(p => p.id === item.product_id || p.mock_id === item.product_id)?.name || 'Unknown Product',
       order_reference: item.orders?.id.substring(0, 8),
       customer_name: `${item.orders?.customer_first_name} ${item.orders?.customer_last_name}`,
       status: item.orders?.status,
