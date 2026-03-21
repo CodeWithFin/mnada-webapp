@@ -9,7 +9,8 @@ interface SellerOrder {
   order_reference: string;
   product_name: string;
   quantity: number;
-  unit_price: number;
+  unit_price?: number;
+  price?: number;
   customer_name: string;
   status: string;
   date: string;
@@ -75,10 +76,10 @@ export default function SellerOrdersPage() {
                 {orders.map((order) => (
                   <tr key={order.id} className="border-b border-[#f0f0f0] last:border-0 hover:bg-[#fafafa] transition-colors">
                     <td className="px-6 py-4 font-mono text-[10px] text-gray-400">
-                      {new Date(order.date).toLocaleDateString()}
+                      {order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-gray-500">
-                      #{order.order_reference}
+                      #{order.order_reference || 'REF'}
                     </td>
                     <td className="px-6 py-4 font-bold text-xs uppercase text-[#1c1a19]">
                       {order.customer_name}
@@ -90,7 +91,7 @@ export default function SellerOrdersPage() {
                       {order.size} x {order.quantity}
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-[#1c1a19]">
-                      KSh {(order.unit_price * order.quantity).toLocaleString()}
+                      KSh {((order.unit_price || order.price || 0) * (order.quantity || 0)).toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
