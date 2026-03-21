@@ -1,27 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+import { verifyRoleRequest } from "@/lib/systemAuth";
+
 // Helper to verify admin token
 async function verifyAdmin(request: Request) {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return false;
-  }
-
-  const token = authHeader.split(" ")[1];
-  
-  // Verify token with Supabase
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
-  if (error || !user) {
-    return false;
-  }
-
-  // Check if user has admin metadata/role
-  // Based on the layout.tsx, admins are checked against a local login usually,
-  // but let's assume if they have a valid token and we trust the admin login flow:
-  return true;
+  return Boolean(await verifyRoleRequest(request, 'admin'));
 }
+
 
 export async function GET(request: Request) {
   if (!(await verifyAdmin(request))) {
