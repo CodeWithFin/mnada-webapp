@@ -261,13 +261,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <Link
-            href="/admin/categories"
-            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname.startsWith("/admin/categories") ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
-          >
-            <Icon icon="lucide:layout-grid" width="18" /> Categories
-          </Link>
-
-          <Link
             href="/admin/settings"
             className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === "/admin/settings" ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
           >
@@ -282,7 +275,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={handleLogout} className="flex items-center gap-3 text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors w-full">
             <Icon icon="lucide:log-out" width="18" /> Logout
           </button>
-          <Link href="/" className="mt-6 flex items-center gap-3 text-xs font-mono text-gray-400 hover:text-[#1c1a19] transition-colors">
+          <Link 
+            href="/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mt-6 flex items-center gap-3 text-xs font-mono text-gray-400 hover:text-[#1c1a19] transition-colors"
+          >
             <Icon icon="lucide:external-link" width="14" /> View Storefront
           </Link>
         </div>
