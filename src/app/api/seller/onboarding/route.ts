@@ -38,7 +38,6 @@ export async function POST(req: Request) {
         name,
         business_category,
         estimated_sales,
-        onboarding_completed: true,
         password_hash,
         status: 'pending'
       })
