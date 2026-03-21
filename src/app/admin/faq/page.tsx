@@ -25,7 +25,11 @@ export default function AdminFaqPage() {
   const fetchFaqs = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/faqs");
+      const res = await fetch("/api/admin/faqs", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("mnada_admin_token")}`,
+        },
+      });
       if (res.ok) {
         setFaqs(await res.json());
       }
@@ -50,7 +54,10 @@ export default function AdminFaqPage() {
     try {
       const res = await fetch("/api/admin/faqs", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("mnada_admin_token")}`,
+        },
         body: JSON.stringify(editingFaq),
       });
 
@@ -73,7 +80,12 @@ export default function AdminFaqPage() {
     if (!confirm("Are you sure you want to delete this FAQ?")) return;
 
     try {
-      const res = await fetch(`/api/admin/faqs?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/faqs?id=${id}`, { 
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("mnada_admin_token")}`,
+        },
+      });
       if (res.ok) {
         fetchFaqs();
       }
