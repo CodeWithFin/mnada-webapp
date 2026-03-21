@@ -105,3 +105,31 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  if (!(await verifyAuth(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    // 1. Delete all order items first (due to foreign key)
+    const { error: itemsError } = await supabaseAdmin
+      .from('order_items')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (itemsError) throw itemsError;
+
+    // 2. Delete all orders
+    const { error: ordersError } = await supabaseAdmin
+      .from('orders')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (ordersError) throw ordersError;
+
+    return NextResponse.json({ success: true, message: 'All orders deleted successfully' });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
+}
