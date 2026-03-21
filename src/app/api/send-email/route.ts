@@ -28,6 +28,7 @@ type CheckoutOrderItem = {
 
 export async function POST(req: Request) {
   try {
+    const {
       customer,
       orderDetails,
       subtotal,
