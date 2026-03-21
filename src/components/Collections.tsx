@@ -15,7 +15,7 @@ export default function Collections() {
               {/* Large Item */}
               <Link href="/mens" className="collection-item_large group relative lg:col-span-6 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
-                  src="https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1974&auto=format&fit=crop" 
+                  src="https://images.unsplash.com/photo-1621446511130-0ed6519bfeb6?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                   alt="Mens Collection"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -51,7 +51,7 @@ export default function Collections() {
                 </Link>
                 <Link href="#" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
-                    src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" 
+                    src="https://images.unsplash.com/photo-1586878341523-7acb55eb8c12?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt="Accessories"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -69,7 +69,7 @@ export default function Collections() {
               {/* Tall Item */}
               <Link href="/womens" className="collection-item_tall group relative lg:col-span-3 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
-                  src="https://images.unsplash.com/photo-1538329972958-465d6d2144ed?q=80&w=2340&auto=format&fit=crop" 
+                  src="https://images.unsplash.com/photo-1531469535976-c6fc3604014f?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                   alt="Womens Collection"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
