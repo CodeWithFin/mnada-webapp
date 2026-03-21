@@ -57,25 +57,25 @@ export default function SellerDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Potential Profit" 
-          value={`KSh ${stats?.summary.totalPotentialProfit.toLocaleString()}`} 
+          value={`KSh ${(stats?.summary?.totalPotentialProfit || 0).toLocaleString()}`} 
           icon="lucide:wallet" 
-          detail={`After ${stats?.summary.commissionRate! * 100}% commission`}
+          detail={`After ${(stats?.summary?.commissionRate || 0) * 100}% commission`}
         />
         <StatCard 
           title="Total Revenue" 
-          value={`KSh ${stats?.summary.totalRevenue.toLocaleString()}`} 
+          value={`KSh ${(stats?.summary?.totalRevenue || 0).toLocaleString()}`} 
           icon="lucide:trending-up" 
-          detail={`${stats?.summary.salesCount} items sold`}
+          detail={`${stats?.summary?.salesCount || 0} items sold`}
         />
         <StatCard 
           title="My Products" 
-          value={stats?.summary.productCount.toString() || "0"} 
+          value={(stats?.summary?.productCount || 0).toString()} 
           icon="lucide:package" 
           detail="Active items in store"
         />
         <StatCard 
           title="Sales" 
-          value={stats?.summary.salesCount.toString() || "0"} 
+          value={(stats?.summary?.salesCount || 0).toString()} 
           icon="lucide:shopping-bag" 
           detail="Successfully confirmed"
         />
@@ -107,10 +107,10 @@ export default function SellerDashboardPage() {
                 ) : (
                   stats?.recentOrders.map((order) => (
                     <tr key={order.id} className="border-b border-[#f0f0f0] last:border-0 hover:bg-[#fafafa] transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{order.order_id.substring(0,8)}...</td>
-                      <td className="px-6 py-4 font-bold text-xs uppercase text-[#1c1a19]">{order.product_name}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{order.quantity}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-[#1c1a19]">KSh {order.total.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-gray-400">{(order.order_id || 'ID').substring(0,8)}...</td>
+                      <td className="px-6 py-4 font-bold text-xs uppercase text-[#1c1a19]">{order.product_name || 'Product'}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{order.quantity || 0}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-[#1c1a19]">KSh {(order.total || 0).toLocaleString()}</td>
                       <td className="px-6 py-4">
                         <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
                           {order.status}
