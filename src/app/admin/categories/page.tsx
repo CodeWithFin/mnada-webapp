@@ -1,285 +1,349 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-
-interface Category {
-  id: string;
-  name: string;
-  created_at?: string;
-}
+import { supabase } from '@/lib/supabase';
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryName, setCategoryName] = useState('');
-  const [error, setError] = useState('');
-  
-  // Notification state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  
-  // Delete confirmation state
-  const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    hero_image_url: ''
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem("mnada_admin_token");
+      const res = await fetch('/api/admin/categories', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/admin/categories');
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.filter((c: any) => c.name !== 'SYSTEM_AUTH'));
-      }
-    } catch (err) {
-      console.error("Failed to fetch categories:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenModal = (category?: Category) => {
-    if (category) {
-      setEditingCategory(category);
-      setCategoryName(category.name);
-    } else {
-      setEditingCategory(null);
-      setCategoryName('');
-    }
+  const openAddModal = () => {
+    setEditingCategory(null);
+    setFormData({ name: '', slug: '', hero_image_url: '' });
+    setSelectedFile(null);
+    setStatus(null);
     setIsModalOpen(true);
-    setError('');
+  };
+
+  const openEditModal = (category: any) => {
+    setEditingCategory(category);
+    setFormData({ 
+      name: category.name, 
+      slug: category.slug, 
+      hero_image_url: category.hero_image_url || '' 
+    });
+    setSelectedFile(null);
+    setStatus(null);
+    setIsModalOpen(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      // Auto-generate slug from name if slug is empty or matches previous name-based slug
+      if (name === 'name' && !editingCategory && (!prev.slug || prev.slug === prev.name.toLowerCase().replace(/\s+/g, '-'))) {
+        newData.slug = value.toLowerCase().replace(/\s+/g, '-');
+      }
+      return newData;
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `hero/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('categories')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('categories')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryName.trim()) {
-      setError("Name is required");
-      return;
-    }
-
-    const token = localStorage.getItem('mnada_admin_token');
-    const method = editingCategory ? 'PUT' : 'POST';
-    const body = editingCategory 
-      ? JSON.stringify({ id: editingCategory.id, name: categoryName })
-      : JSON.stringify({ name: categoryName });
+    setIsSubmitting(true);
+    setStatus(null);
+    setUploadProgress(0);
 
     try {
+      let hero_image_url = formData.hero_image_url;
+
+      if (selectedFile) {
+        setUploadProgress(20);
+        hero_image_url = await uploadImage(selectedFile);
+        setUploadProgress(80);
+      }
+
+      const token = localStorage.getItem("mnada_admin_token");
+      const method = editingCategory ? 'PUT' : 'POST';
+      const body = editingCategory 
+        ? { ...formData, id: editingCategory.id, hero_image_url }
+        : { ...formData, hero_image_url };
+
       const res = await fetch('/api/admin/categories', {
         method,
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
-        setIsModalOpen(false);
-        showToast(`Category ${editingCategory ? 'updated' : 'created'} successfully`);
-        fetchCategories();
+        setStatus({ type: 'success', message: `Category ${editingCategory ? 'updated' : 'created'} successfully!` });
+        setTimeout(() => {
+          setIsModalOpen(false);
+          fetchCategories();
+        }, 800);
       } else {
         const data = await res.json();
-        setError(data.error || "Something went wrong");
+        setStatus({ type: 'error', message: data.error || 'Failed to save category.' });
       }
-    } catch (err) {
-      setError("Failed to save category");
+    } catch (err: any) {
+      console.error(err);
+      setStatus({ type: 'error', message: err.message || 'An error occurred.' });
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteConfirm) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this category page?')) return;
 
-    setIsDeleting(true);
-    const token = localStorage.getItem('mnada_admin_token');
     try {
-      const res = await fetch(`/api/admin/categories?id=${deleteConfirm.id}`, {
+      const token = localStorage.getItem("mnada_admin_token");
+      const res = await fetch(`/api/admin/categories?id=${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
-        showToast("Category deleted successfully");
-        setDeleteConfirm(null);
         fetchCategories();
-      } else {
-        showToast("Failed to delete category", "error");
       }
     } catch (err) {
-      showToast("Error deleting category", "error");
-    } finally {
-      setIsDeleting(false);
+      console.error(err);
     }
   };
 
   return (
-    <div className="flex flex-col gap-10">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-mono uppercase tracking-[0.2em] text-[#1c1a19]">Categories</h1>
-          <p className="text-sm font-mono text-gray-500 mt-2">Manage product categories</p>
+    <div className="flex flex-col gap-12 max-w-6xl">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-end">
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#a58c69]">Page Builder</span>
+            <h1 className="text-3xl font-bold uppercase tracking-tight text-[#1c1a19]">Category Pages</h1>
+          </div>
+          <button 
+            onClick={openAddModal}
+            className="bg-[#1c1a19] text-white px-6 h-12 font-bold uppercase text-[10px] tracking-widest hover:bg-[#a58c69] transition-all flex items-center gap-2"
+          >
+            <Icon icon="lucide:plus" width="16" />
+            Add Category Page
+          </button>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-[#1c1a19] text-white px-8 py-4 text-xs font-mono uppercase tracking-widest hover:bg-[#a58c69] transition-all flex items-center gap-2"
-        >
-          <Icon icon="lucide:plus" /> Add Category
-        </button>
+        <p className="text-sm font-mono text-gray-400">Manage store categories and their unique landing pages.</p>
       </div>
 
-      <div className="bg-white border border-[#eaeaea]">
+      {/* Categories List */}
+      <div className="bg-white border border-[#e5e5e5] overflow-hidden">
+        <div className="p-6 border-b border-[#f0f0f0] bg-[#fafafa]">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#1c1a19]">Active Pages ({categories.length})</h2>
+        </div>
+        
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[#eaeaea] bg-[#fafafa]">
-                <th className="px-8 py-5 text-[10px] font-mono uppercase tracking-widest text-gray-400">Name</th>
-                <th className="px-8 py-5 text-[10px] font-mono uppercase tracking-widest text-gray-400">Created At</th>
-                <th className="px-8 py-5 text-[10px] font-mono uppercase tracking-widest text-gray-400 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#eaeaea]">
-              {loading ? (
+          {isLoading ? (
+            <div className="p-12 flex justify-center text-gray-400"><Icon icon="lucide:loader" className="animate-spin" width="24" /></div>
+          ) : categories.length === 0 ? (
+            <div className="p-12 text-center text-xs font-mono text-gray-400">No category pages created yet.</div>
+          ) : (
+            <table className="w-full text-left">
+              <thead className="bg-[#fafafa] border-b border-[#f0f0f0]">
                 <tr>
-                  <td colSpan={3} className="px-8 py-10 text-center font-mono text-xs text-gray-400">Loading...</td>
+                  <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-gray-500">Name / Slug</th>
+                  <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-gray-500">Hero Image</th>
+                  <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-widest text-gray-500 text-right">Actions</th>
                 </tr>
-              ) : categories.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-8 py-10 text-center font-mono text-xs text-gray-400">No categories found</td>
-                </tr>
-              ) : (
-                categories.map((category) => (
-                  <tr key={category.id} className="hover:bg-[#fafafa] transition-colors group">
-                    <td className="px-8 py-5">
-                      <span className="text-sm font-mono text-[#1c1a19] capitalize">{category.name}</span>
+              </thead>
+              <tbody className="divide-y divide-[#f0f0f0]">
+                {categories.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-[#fafafa] transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-[#1c1a19]">{cat.name}</span>
+                        <span className="text-[10px] font-mono text-gray-400">/category/{cat.slug}</span>
+                      </div>
                     </td>
-                    <td className="px-8 py-5">
-                      <span className="text-xs font-mono text-gray-400 whitespace-nowrap">
-                        {category.created_at ? new Date(category.created_at).toLocaleDateString() : 'N/A'}
-                      </span>
+                    <td className="px-6 py-5">
+                        {cat.hero_image_url ? (
+                            <div className="w-20 h-12 bg-gray-100 border border-gray-200 overflow-hidden rounded-sm">
+                                <img src={cat.hero_image_url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                        ) : (
+                            <div className="w-20 h-12 bg-gray-50 border border-dashed border-gray-300 flex items-center justify-center rounded-sm">
+                                <Icon icon="lucide:image" width="16" className="text-gray-300" />
+                            </div>
+                        )}
                     </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-4">
-                        <button 
-                          onClick={() => handleOpenModal(category)}
-                          className="text-gray-400 hover:text-[#a58c69] transition-colors"
-                          title="Edit"
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <a 
+                            href={`/category/${cat.slug}`} 
+                            target="_blank"
+                            className="p-2 text-gray-400 hover:text-[#a58c69] transition-colors"
+                            title="View Page"
                         >
-                          <Icon icon="lucide:edit-2" width="16" />
+                            <Icon icon="lucide:external-link" width="18" />
+                        </a>
+                        <button 
+                            onClick={() => openEditModal(cat)}
+                            className="p-2 text-gray-400 hover:text-[#1c1a19] transition-colors"
+                            title="Edit Page"
+                        >
+                            <Icon icon="lucide:edit-3" width="18" />
                         </button>
                         <button 
-                          onClick={() => setDeleteConfirm(category)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                          title="Delete"
+                            onClick={() => handleDelete(cat.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Delete"
                         >
-                          <Icon icon="lucide:trash-2" width="16" />
+                            <Icon icon="lucide:trash-2" width="18" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed bottom-10 right-10 z-[100] animate-in slide-in-from-right-10 duration-500`}>
-          <div className={`${toast.type === 'success' ? 'bg-[#1c1a19]' : 'bg-red-600'} text-white px-8 py-4 flex items-center gap-3 shadow-2xl border-l-4 ${toast.type === 'success' ? 'border-[#a58c69]' : 'border-white'}`}>
-            <Icon icon={toast.type === 'success' ? "lucide:check-circle" : "lucide:alert-circle"} width="20" />
-            <span className="text-xs font-mono uppercase tracking-widest">{toast.message}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-md border border-[#eaeaea] p-10 animate-in fade-in zoom-in duration-300">
-            <div className="flex flex-col items-center text-center gap-6">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500">
-                <Icon icon="lucide:alert-triangle" width="32" />
-              </div>
-              <div>
-                <h2 className="text-xl font-mono uppercase tracking-widest text-[#1c1a19]">Delete Category?</h2>
-                <p className="text-sm font-mono text-gray-500 mt-4 leading-relaxed">
-                  Are you sure you want to delete <span className="text-[#1c1a19] font-bold">"{deleteConfirm.name}"</span>?
-                  <br />
-                  <span className="text-xs mt-2 block">Products in this category will remain, but their category label will be outdated.</span>
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                <button 
-                  onClick={() => setDeleteConfirm(null)}
-                  disabled={isDeleting}
-                  className="px-8 py-4 text-xs font-mono uppercase tracking-widest border border-[#eaeaea] hover:bg-[#fafafa] transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="bg-red-600 text-white px-8 py-4 text-xs font-mono uppercase tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isDeleting ? <Icon icon="lucide:loader" className="animate-spin" /> : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md border border-[#eaeaea] p-10 animate-in fade-in zoom-in duration-300">
-            <div className="flex justify-between items-start mb-10">
-              <h2 className="text-xl font-mono uppercase tracking-widest text-[#1c1a19]">
-                {editingCategory ? 'Edit Category' : 'New Category'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isSubmitting && setIsModalOpen(false)}></div>
+          
+          <div className="relative bg-white w-full max-w-md shadow-2xl animate-in zoom-in duration-300 overflow-hidden">
+            <div className="p-8 border-b border-[#f0f0f0] flex justify-between items-center bg-[#fafafa]">
+              <h2 className="text-lg font-bold uppercase tracking-widest text-[#1c1a19]">
+                {editingCategory ? 'Edit Category Page' : 'New Category Page'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-[#1c1a19]">
-                <Icon icon="lucide:x" width="20" />
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-black transition-colors">
+                <Icon icon="lucide:x" width="24" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-              <div className="flex flex-col gap-4">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Category Name</label>
+            <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Page Name</label>
                 <input 
                   type="text" 
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full border-b border-[#eaeaea] py-3 focus:outline-none focus:border-[#a58c69] text-sm font-mono transition-colors"
-                  placeholder="e.g., Children's clothes"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Mens, Accessories..."
+                  className="bg-[#f8f8f8] border border-[#e5e5e5] h-12 px-4 text-xs font-mono outline-none focus:border-[#a58c69] transition-colors"
                 />
-                {error && <p className="text-[10px] text-red-500 font-mono uppercase tracking-widest">{error}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">URL Slug</label>
+                <input 
+                  type="text" 
+                  name="slug"
+                  required
+                  value={formData.slug}
+                  onChange={handleInputChange}
+                  placeholder="e.g. men, accessories..."
+                  className="bg-[#f8f8f8] border border-[#e5e5e5] h-12 px-4 text-xs font-mono outline-none focus:border-[#a58c69] transition-colors"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Hero Image</label>
+                <div className="flex flex-col gap-4">
+                    {formData.hero_image_url && !selectedFile && (
+                        <div className="w-full h-32 bg-gray-50 border border-[#e5e5e5] overflow-hidden rounded-sm relative group">
+                            <img src={formData.hero_image_url} alt="Current hero" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-white text-[10px] font-bold uppercase">Current Image</span>
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="text-xs font-mono file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-[#1c1a19] file:text-white hover:file:bg-[#a58c69] cursor-pointer"
+                        />
+                        <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">Uploading a new image will replace the current one.</p>
+                    </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 mt-4">
                 <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-8 py-4 text-xs font-mono uppercase tracking-widest border border-[#eaeaea] hover:bg-[#fafafa] transition-colors"
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="bg-[#1c1a19] text-white h-14 font-bold uppercase text-xs tracking-[0.2em] hover:bg-[#a58c69] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Cancel
+                  {isSubmitting ? <Icon icon="lucide:loader" className="animate-spin" width="18" /> : <Icon icon="lucide:save" width="18" />}
+                  {isSubmitting ? 'Saving Changes...' : (editingCategory ? 'Update Page' : 'Create Page')}
                 </button>
-                <button 
-                  type="submit"
-                  className="bg-[#1c1a19] text-white px-8 py-4 text-xs font-mono uppercase tracking-widest hover:bg-[#a58c69] transition-all"
-                >
-                  {editingCategory ? 'Update' : 'Create'}
-                </button>
+
+                {uploadProgress !== null && (
+                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#a58c69] transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                  </div>
+                )}
+
+                {status && (
+                  <div className={`p-4 text-[10px] uppercase tracking-widest font-bold text-center ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                    {status.message}
+                  </div>
+                )}
               </div>
             </form>
           </div>
