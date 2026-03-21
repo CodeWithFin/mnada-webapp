@@ -17,7 +17,7 @@ async function testEmail() {
   console.log("Testing Resend with API Key:", apiKey.substring(0, 10) + "...");
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Mnada <orders@orders.mnada.shop>',
+      from: 'Mnada <orders@mnada.shop>',
       to: ['finley.mwachia12@gmail.com'], // Using the email from git log
       subject: 'Test Email from Mnada',
       html: '<p>This is a test email to verify Resend integration.</p>'
