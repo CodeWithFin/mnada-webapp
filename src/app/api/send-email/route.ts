@@ -28,17 +28,18 @@ type CheckoutOrderItem = {
 
 export async function POST(req: Request) {
   try {
-    const {
       customer,
       orderDetails,
       subtotal,
       shipping,
+      discount,
       total
     }: {
       customer: CheckoutCustomer;
       orderDetails: CheckoutOrderItem[];
       subtotal: number;
       shipping: number;
+      discount?: { codeId: string; code: string; amount: number } | null;
       total: number | string;
     } = await req.json();
 
@@ -58,6 +59,8 @@ export async function POST(req: Request) {
         customer_phone: normalizedPhone,
         subtotal: subtotal,
         shipping_cost: shipping,
+        discount_code: discount?.code || null,
+        discount_amount: discount?.amount || 0,
         total: total.toString()
       })
       .select('id, created_at')
@@ -66,6 +69,21 @@ export async function POST(req: Request) {
     if (orderError) {
       console.error("Failed to insert order:", orderError);
       return NextResponse.json({ error: "Failed to create order tracking record." }, { status: 500 });
+    }
+
+    // 1b. Record Discount Usage
+    if (discount?.codeId) {
+      const { error: usageError } = await supabaseAdmin
+        .from('discount_usage')
+        .insert({
+          code_id: discount.codeId,
+          email: customer.email.toLowerCase().trim(),
+          order_id: orderData.id
+        });
+      
+      if (usageError) {
+        console.error("Failed to record discount usage:", usageError);
+      }
     }
 
     // 2. Insert Order Items
