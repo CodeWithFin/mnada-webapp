@@ -23,6 +23,7 @@ export const viewport: Viewport = {
 
 
 import { CartProvider } from "@/context/CartContext";
+import MobileCartPopup from "@/components/MobileCartPopup";
 
 export default function RootLayout({
   children,
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className={`${spaceMono.variable} antialiased selection:bg-[#a58c69] selection:text-white font-[family-name:var(--font-space-mono)]`}>
         <CartProvider>
           {children}
+          <MobileCartPopup />
         </CartProvider>
       </body>
     </html>
