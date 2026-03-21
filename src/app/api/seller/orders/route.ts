@@ -30,21 +30,23 @@ export async function GET(req: Request) {
         *,
         orders (*)
       `)
-      .in('product_id', productIds)
-      .order('created_at', { ascending: false });
+      .in('product_id', productIds);
 
     if (oError) throw oError;
 
     // Group items by order if necessary, but usually sellers want to see individual item sales
     // We'll return the items with their order context
-    const formattedOrders = orderItems.map((item: any) => ({
-      ...item,
-      product_name: products.find(p => p.id === item.product_id || p.mock_id === item.product_id)?.name || 'Unknown Product',
-      order_reference: item.orders?.id.substring(0, 8),
-      customer_name: `${item.orders?.customer_first_name} ${item.orders?.customer_last_name}`,
-      status: item.orders?.status,
-      date: item.orders?.created_at
-    }));
+    // Sort in memory by order date
+    const formattedOrders = orderItems
+      .map((item: any) => ({
+        ...item,
+        product_name: products.find(p => p.id === item.product_id || p.mock_id === item.product_id)?.name || 'Unknown Product',
+        order_reference: item.orders?.id.substring(0, 8),
+        customer_name: `${item.orders?.customer_first_name} ${item.orders?.customer_last_name}`,
+        status: item.orders?.status,
+        date: item.orders?.created_at
+      }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return NextResponse.json(formattedOrders);
 

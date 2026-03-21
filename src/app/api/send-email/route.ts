@@ -112,6 +112,39 @@ export async function POST(req: Request) {
       `. Items: ${itemsSummary}. Total: KSh ${totalFormatted}.`;
     smsPromises.push(sendSMS(OWNER_PHONE, ownerMsg));
 
+    // 3b. SMS to individual sellers
+    try {
+      // Find all unique products in this order
+      const productIds = orderDetails.map(item => item.id);
+      const { data: products } = await supabaseAdmin
+        .from('products')
+        .select('id, mock_id, name, seller_id, sellers(phone, brand_name)')
+        .or(`id.in.(${productIds.join(',')}),mock_id.in.(${productIds.join(',')})`);
+
+      if (products) {
+        const sellerMessages = new Map<string, { phone: string, items: string[], brand: string }>();
+
+        orderDetails.forEach(item => {
+          const product = products.find(p => p.id === item.id || p.mock_id === item.id);
+          const seller = (product as any)?.sellers;
+          if (seller?.phone) {
+            const sellerId = product.seller_id!;
+            if (!sellerMessages.has(sellerId)) {
+              sellerMessages.set(sellerId, { phone: seller.phone, items: [], brand: seller.brand_name });
+            }
+            sellerMessages.get(sellerId)!.items.push(`${item.name} x${item.quantity}`);
+          }
+        });
+
+        sellerMessages.forEach((data, sellerId) => {
+          const sellerMsg = `Hello ${data.brand}, you have a new order ${orderReference}! Items: ${data.items.join(', ')}. Login to your Mnada portal to manage it.`;
+          smsPromises.push(sendSMS(data.phone, sellerMsg));
+        });
+      }
+    } catch (sellerSmsError) {
+      console.error("Failed to send seller notifications:", sellerSmsError);
+    }
+
     const smsResults = await Promise.allSettled(smsPromises);
     smsResults.forEach((result, i) => {
       if (result.status === "rejected") {
