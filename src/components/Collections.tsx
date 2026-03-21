@@ -51,7 +51,7 @@ export default function Collections() {
                 </Link>
                 <Link href="#" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
-                    src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" 
+                    src="https://images.unsplash.com/photo-1586878341523-7acb55eb8c12?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt="Accessories"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
