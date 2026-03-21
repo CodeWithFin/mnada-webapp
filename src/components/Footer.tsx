@@ -37,7 +37,7 @@ export default function Footer() {
               <h4 className="font-bold uppercase tracking-widest text-[10px] text-[#a58c69] mb-6">Support</h4>
               <ul className="space-y-4">
                 <li><Link href="/account" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Account</Link></li>
-                <li><Link href="#" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Shipping</Link></li>
+                <li><Link href="/shipping" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Shipping</Link></li>
                 <li><Link href="/returns" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Returns</Link></li>
                 <li><Link href="/faq" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">FAQ</Link></li>
                 <li><Link href="/feedback" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Feedback</Link></li>
