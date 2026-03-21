@@ -69,8 +69,11 @@ export async function POST(req: Request) {
       .single();
 
     if (orderError) {
-      console.error("Failed to insert order:", orderError);
-      return NextResponse.json({ error: "Failed to create order tracking record." }, { status: 500 });
+      console.error("CRITICAL: Failed to insert order into Supabase:", orderError);
+      return NextResponse.json({ 
+        error: "Failed to create order tracking record.",
+        details: orderError.message 
+      }, { status: 500 });
     }
 
     // 1b. Record Discount Usage
@@ -221,4 +224,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
-
