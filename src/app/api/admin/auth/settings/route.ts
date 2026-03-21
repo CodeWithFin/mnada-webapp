@@ -36,7 +36,7 @@ export async function PUT(request: Request) {
 
     const adminUser = await findSystemUser(currentUsername, 'admin');
 
-    if (!adminUser) {
+    if (!adminUser || !adminUser.description) {
       return NextResponse.json(
         { error: 'Invalid current credentials' },
         { status: 401 }
