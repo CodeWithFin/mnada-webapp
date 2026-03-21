@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyRoleRequest } from '@/lib/systemAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,6 +153,55 @@ export async function GET() {
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return NextResponse.json(merged);
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const admin = await verifyRoleRequest(req, 'admin');
+    if (!admin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing feedback ID' }, { status: 400 });
+    }
+
+    // 1. Try deleting from the proper feedback table (UUID check)
+    if (id.includes('-')) {
+      const { error: feedbackError } = await supabaseAdmin
+        .from('feedback')
+        .delete()
+        .eq('id', id);
+
+      if (!feedbackError) {
+        return NextResponse.json({ success: true });
+      }
+    }
+
+    // 2. Try deleting from the fallback products table
+    // Fallback IDs are either created_at timestamps or mock IDs
+    const { error: productsError } = await supabaseAdmin
+      .from('products')
+      .delete()
+      .eq('category', SYSTEM_AUTH_CATEGORY)
+      .eq('created_at', id);
+
+    if (productsError) {
+      // Also try mock_id check if created_at didn't match (less likely but possible)
+      await supabaseAdmin
+        .from('products')
+        .delete()
+        .eq('category', SYSTEM_AUTH_CATEGORY)
+        .eq('mock_id', id);
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
