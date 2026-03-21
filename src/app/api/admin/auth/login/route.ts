@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const adminUser = await findSystemUser(username, 'admin');
 
-    if (!adminUser.description) {
+    if (!adminUser || !adminUser.description) {
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
