@@ -81,24 +81,6 @@ export default function ShippingSection() {
 
             </div>
 
-            <div className="bg-[#1c1a19] p-8 lg:p-12 flex flex-col md:flex-row items-center justify-between gap-8 mt-6">
-              <div className="flex flex-col gap-4">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-white">Track Your Order</h3>
-                <p className="text-xs font-mono text-gray-400 uppercase tracking-widest">Enter your order ID for a real-time status update.</p>
-              </div>
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <input 
-                  type="text" 
-                  placeholder="Order ID" 
-                  className="h-14 px-6 bg-[#2a2827] text-white border border-[#3a3837] font-mono text-xs focus:outline-none focus:border-[#a58c69] w-full md:w-48"
-                />
-                <button 
-                  className="h-14 px-8 bg-white text-[#1c1a19] font-bold uppercase tracking-widest text-[10px] hover:bg-[#a58c69] hover:text-white transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-                >
-                  Track Now
-                </button>
-              </div>
-            </div>
 
           </div>
         </div>
