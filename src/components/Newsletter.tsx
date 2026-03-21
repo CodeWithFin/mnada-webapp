@@ -50,15 +50,15 @@ export default function Newsletter() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ENTER YOUR EMAIL" 
-                className="flex-1 bg-white h-20 md:h-16 px-8 text-base md:text-sm outline-none text-[#1c1a19] placeholder:text-gray-400 placeholder:tracking-[0.2em] placeholder:uppercase font-light"
+                className="flex-1 bg-white h-24 md:h-16 px-8 text-xl md:text-sm outline-none text-[#1c1a19] placeholder:text-gray-400 placeholder:tracking-[0.3em] placeholder:uppercase font-light"
                 disabled={isSubmitting}
               />
               <button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="bg-[#1c1a19] text-white h-20 md:h-16 px-10 font-bold uppercase text-xs md:text-[10px] tracking-[0.2em] hover:bg-[#a58c69] transition-colors disabled:opacity-50"
+                className="bg-[#1c1a19] text-white h-14 md:h-16 px-10 font-bold uppercase text-[10px] tracking-[0.2em] hover:bg-[#a58c69] transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? <Icon icon="lucide:loader" className="animate-spin" width="24" /> : 'Subscribe'}
+                {isSubmitting ? <Icon icon="lucide:loader" className="animate-spin" width="20" /> : 'Subscribe'}
               </button>
             </form>
 
