@@ -39,7 +39,7 @@ export default function Footer() {
                 <li><Link href="/account" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Account</Link></li>
                 <li><Link href="#" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Shipping</Link></li>
                 <li><Link href="#" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Returns</Link></li>
-                <li><Link href="#" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">FAQ</Link></li>
+                <li><Link href="/faq" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">FAQ</Link></li>
                 <li><Link href="/feedback" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Feedback</Link></li>
                 <li><Link href="/seller/signup" className="text-xs font-bold text-[#a58c69] hover:text-[#1c1a19] transition-colors uppercase tracking-wide border-t border-[#f0f0f0] pt-2 mt-2 block">Become a Seller</Link></li>
               </ul>
