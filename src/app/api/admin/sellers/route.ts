@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifyRoleRequest } from '@/lib/systemAuth';
+import { resend } from '@/lib/resend';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,6 +98,42 @@ export async function PUT(req: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // --- Send Approval Email ---
+    if (status === 'approved') {
+      try {
+        await resend.emails.send({
+          from: 'Mnada Admin <hello@mnada.shop>',
+          to: [data.email],
+          subject: 'Congratulations! Your Mnada Seller Account is Approved',
+          html: `
+            <div style="font-family: monospace; padding: 40px; color: #1c1a19; background-color: #f8f8f8;">
+              <div style="background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e5;">
+                <h2 style="text-transform: uppercase; border-bottom: 2px solid #1c1a19; padding-bottom: 10px; margin-bottom: 30px;">MNADA</h2>
+                <h3 style="text-transform: uppercase; color: #a58c69;">Welcome to the Pioneer Program</h3>
+                <p>Hello ${data.name},</p>
+                <p>Great news! Your application to become a seller on Mnada has been <strong>approved</strong>.</p>
+                <p style="margin-top: 20px;">You can now log in to the Seller Portal to set up your brand profile and start adding products.</p>
+                
+                <div style="margin: 40px 0;">
+                  <a href="https://mnada.shop/seller/login" style="background-color: #1c1a19; color: #ffffff; padding: 15px 30px; text-decoration: none; text-transform: uppercase; font-size: 12px; font-weight: bold; letter-spacing: 0.1em;">Go to Seller Portal</a>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+                <p style="font-size: 11px; color: #666; font-style: italic;">
+                  "Industrial goods for the modern pioneer. Designed in Nakuru, worn worldwide."
+                </p>
+                <p style="font-size: 10px; color: #999; margin-top: 20px;">
+                  Est. 2025 • Nakuru, Kenya
+                </p>
+              </div>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        console.error('Failed to send approval email:', emailErr);
+      }
     }
 
     return NextResponse.json(data);
