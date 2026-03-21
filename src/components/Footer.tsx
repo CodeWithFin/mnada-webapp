@@ -16,9 +16,10 @@ export default function Footer() {
                 Provisions for the wild. Industrial goods for the modern pioneer. Worn worldwide.
               </p>
               <div className="footer_socials flex gap-4 opacity-60">
-                <Link href="#" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:instagram" width="18" /></Link>
-                <Link href="#" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:facebook" width="18" /></Link>
-                <Link href="#" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:twitter" width="18" /></Link>
+                <Link href="https://www.instagram.com/mnada_network?igsh=amN5OW4zOHZxenUw" target="_blank" rel="noopener noreferrer" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:instagram" width="18" /></Link>
+                <Link href="https://www.facebook.com/share/1DTAoHgDrZ/" target="_blank" rel="noopener noreferrer" className="hover:text-[#a58c69] transition-colors"><Icon icon="lucide:facebook" width="18" /></Link>
+                <Link href="https://x.com/DrAsclepius99" target="_blank" rel="noopener noreferrer" className="hover:text-[#a58c69] transition-colors"><Icon icon="simple-icons:x" width="18" /></Link>
+                <Link href="https://www.tiktok.com/@mnada.network?_r=1&_t=ZS-94sPqcD0sRZ" target="_blank" rel="noopener noreferrer" className="hover:text-[#a58c69] transition-colors"><Icon icon="simple-icons:tiktok" width="18" /></Link>
               </div>
             </div>
             
