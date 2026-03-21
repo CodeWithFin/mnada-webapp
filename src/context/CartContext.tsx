@@ -19,12 +19,17 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
+  lastAddedItem: CartItem | null;
+  isPopupOpen: boolean;
+  closePopup: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -55,7 +60,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, item];
     });
+    
+    // Trigger mobile popup
+    setLastAddedItem(item);
+    setIsPopupOpen(true);
   };
+
+  const closePopup = () => setIsPopupOpen(false);
 
   const removeFromCart = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
@@ -84,7 +95,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity, 
       clearCart,
       totalItems,
-      subtotal
+      subtotal,
+      lastAddedItem,
+      isPopupOpen,
+      closePopup
     }}>
       {children}
     </CartContext.Provider>
