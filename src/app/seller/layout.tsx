@@ -50,8 +50,8 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  // If on login page, don't show the layout
-  if (pathname === "/seller/login") {
+  // If on login or signup page, don't show the layout
+  if (pathname === "/seller/login" || pathname === "/seller/signup") {
     return <>{children}</>;
   }
 
