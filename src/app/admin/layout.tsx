@@ -261,6 +261,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <Link
+            href="/admin/categories"
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname.startsWith("/admin/categories") ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
+          >
+            <Icon icon="lucide:layout-grid" width="18" /> Categories
+          </Link>
+
+          <Link
             href="/admin/settings"
             className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === "/admin/settings" ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
           >
