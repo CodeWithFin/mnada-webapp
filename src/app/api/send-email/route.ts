@@ -158,7 +158,7 @@ export async function POST(req: Request) {
     try {
       console.log("Attempting to send email to:", customer.email);
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: 'Mnada <orders@orders.mnada.shop>',
+        from: 'Mnada <orders@mnada.shop>',
         to: [customer.email],
         subject: `Order Confirmation - ${orderReference}`,
         html: `
