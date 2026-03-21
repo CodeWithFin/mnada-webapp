@@ -19,7 +19,7 @@ export default function FeedbackSection() {
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const res = await fetch('/api/feedback');
+        const res = await fetch(`/api/feedback?t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           setFeedbacks(data);
