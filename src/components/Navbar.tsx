@@ -114,10 +114,6 @@ export default function Navbar() {
               <Icon icon="lucide:store" width="20" strokeWidth="1.5" />
               <span className="text-sm font-mono uppercase tracking-widest underline decoration-2 underline-offset-4">Become a Seller</span>
             </Link>
-            <div className="flex items-center gap-4 text-[#1c1a19]">
-              <Icon icon="lucide:search" width="20" strokeWidth="1.5" />
-              <span className="text-sm font-mono uppercase tracking-widest">Search</span>
-            </div>
           </div>
         </div>
       </div>
