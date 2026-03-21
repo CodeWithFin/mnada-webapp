@@ -15,7 +15,7 @@ export default function Collections() {
               {/* Large Item */}
               <Link href="/mens" className="collection-item_large group relative lg:col-span-6 min-h-[500px] overflow-hidden bg-[#f0f0f0] block">
                 <Image 
-                  src="https://images.unsplash.com/photo-1520975661595-6453be3f7070?q=80&w=1974&auto=format&fit=crop" 
+                  src="https://images.unsplash.com/photo-1620799139507-2a76f79a2f4d?q=80&w=1972&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                   alt="Mens Collection"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
