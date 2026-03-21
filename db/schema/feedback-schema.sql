@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.feedback (
     email TEXT NOT NULL,
     phone TEXT,
     message TEXT NOT NULL,
+    rating INTEGER DEFAULT 5,
     status TEXT DEFAULT 'pending', -- pending, approved, hidden
     is_featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),

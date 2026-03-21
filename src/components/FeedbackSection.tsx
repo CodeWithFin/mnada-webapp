@@ -8,8 +8,10 @@ export default function FeedbackSection() {
     name: '',
     email: '',
     phone: '',
-    message: ''
+    message: '',
+    rating: 5
   });
+  const [hoverRating, setHoverRating] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -40,6 +42,10 @@ export default function FeedbackSection() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleRatingClick = (rating: number) => {
+    setForm((prev) => ({ ...prev, rating }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setResult(null);
@@ -58,7 +64,7 @@ export default function FeedbackSection() {
       }
 
       setResult({ type: 'success', message: 'Thank you! Your feedback has been received.' });
-      setForm({ name: '', email: '', phone: '', message: '' });
+      setForm({ name: '', email: '', phone: '', message: '', rating: 5 });
       
       // Refresh feedbacks
       const freshRes = await fetch(`/api/feedback?t=${Date.now()}`);
@@ -89,7 +95,32 @@ export default function FeedbackSection() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-white border border-[#e5e5e5] p-6 lg:p-8 flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="bg-white border border-[#e5e5e5] p-6 lg:p-8 flex flex-col gap-4 text-[#1c1a19]">
+              <div className="flex flex-col gap-2 mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Your Rating</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => handleRatingClick(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="transition-transform hover:scale-110 focus:outline-none"
+                    >
+                      <Icon
+                        icon="lucide:star"
+                        className={`w-6 h-6 ${
+                          star <= (hoverRating || form.rating)
+                            ? 'text-[#a58c69] fill-[#a58c69]'
+                            : 'text-gray-200 fill-transparent'
+                        } transition-colors`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <input
                 name="name"
                 value={form.name}
@@ -147,7 +178,7 @@ export default function FeedbackSection() {
 
           {/* Feedback Display Section */}
           <div className="border-t border-[#e5e5e5] pt-16">
-            <h3 className="text-xl font-bold uppercase tracking-tight mb-10">Customer Voices</h3>
+            <h3 className="text-xl font-bold uppercase tracking-tight mb-10 text-[#1c1a19]">Customer Voices</h3>
             
             {isLoadingFeedbacks ? (
               <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
@@ -162,7 +193,13 @@ export default function FeedbackSection() {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex gap-1 text-[#a58c69]">
                         {[...Array(5)].map((_, i) => (
-                          <Icon key={i} icon="lucide:star" className="w-3 h-3 fill-current" />
+                          <Icon
+                            key={i}
+                            icon="lucide:star"
+                            className={`w-3 h-3 ${
+                              i < (item.rating || 5) ? 'fill-current' : 'text-gray-200 fill-transparent'
+                            }`}
+                          />
                         ))}
                       </div>
                       <span className="text-[10px] font-mono text-gray-400 uppercase">
@@ -171,7 +208,7 @@ export default function FeedbackSection() {
                     </div>
                     <p className="text-sm font-mono text-[#1c1a19] leading-6 mb-4">"{item.message}"</p>
                     <div className="border-t border-[#f0f0f0] pt-4">
-                      <p className="text-[10px] font-bold uppercase tracking-widest">{item.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#1c1a19]">{item.name}</p>
                       <p className="text-[9px] text-gray-400 uppercase">Verified Customer</p>
                     </div>
                   </div>

@@ -11,6 +11,7 @@ type FeedbackPayload = {
   email: string;
   phone?: string;
   message: string;
+  rating: number;
 };
 
 function getErrorMessage(error: unknown) {
@@ -30,6 +31,7 @@ function validate(payload: Partial<FeedbackPayload>) {
   if (!payload.name || payload.name.trim().length < 2) return 'Name is required';
   if (!payload.email || !payload.email.includes('@')) return 'Valid email is required';
   if (!payload.message || payload.message.trim().length < 10) return 'Feedback message is too short';
+  if (!payload.rating || payload.rating < 1 || payload.rating > 5) return 'Valid rating (1-5) is required';
   return null;
 }
 
@@ -47,6 +49,7 @@ async function insertFallbackFeedback(payload: FeedbackPayload) {
         email: payload.email.trim(),
         phone: payload.phone?.trim() || null,
         message: payload.message.trim(),
+        rating: payload.rating,
         created_at: new Date().toISOString()
       }),
       price: 0,
@@ -75,7 +78,8 @@ export async function POST(req: Request) {
       name: body.name!.trim(),
       email: body.email!.trim(),
       phone: body.phone?.trim() || '',
-      message: body.message!.trim()
+      message: body.message!.trim(),
+      rating: body.rating || 5
     };
 
     const { error } = await supabaseAdmin
@@ -84,7 +88,8 @@ export async function POST(req: Request) {
         name: payload.name,
         email: payload.email,
         phone: payload.phone || null,
-        message: payload.message
+        message: payload.message,
+        rating: payload.rating
       });
 
     if (error) {
@@ -127,6 +132,7 @@ export async function GET() {
               id: item.created_at,
               name: parsed.name,
               message: parsed.message,
+              rating: parsed.rating || 5,
               created_at: parsed.created_at || item.created_at,
               status: 'approved' // Consider fallback items as approved
             };
