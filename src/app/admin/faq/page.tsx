@@ -138,17 +138,26 @@ export default function AdminFaqPage() {
                     <p className="text-[10px] font-mono text-gray-400 italic">Asked by: {faq.author_name} {faq.author_email ? `(${faq.author_email})` : ''} on {new Date(faq.created_at).toLocaleDateString()}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditingFaq(faq)} className="p-2 hover:bg-[#f8f8f8] text-gray-400 hover:text-[#1c1a19] transition-colors" title="Edit/Answer">
-                    <Icon icon="lucide:edit" width="18" />
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <button 
+                    onClick={() => setEditingFaq(faq)} 
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1c1a19] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#a58c69] transition-colors"
+                  >
+                    <Icon icon="lucide:message-square" width="14" />
+                    {faq.answer ? "Edit Answer" : "Answer Now"}
                   </button>
-                  <button onClick={() => handleDelete(faq.id)} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" title="Delete">
+                  <button 
+                    onClick={() => handleDelete(faq.id)} 
+                    className="p-2 border border-[#e5e5e5] text-gray-400 hover:text-red-600 hover:border-red-200 transition-colors" 
+                    title="Delete"
+                  >
                     <Icon icon="lucide:trash-2" width="18" />
                   </button>
                 </div>
               </div>
               {faq.answer && (
                 <div className="pt-4 border-t border-[#f0f0f0]">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#a58c69] mb-2">Internal Answer:</p>
                   <p className="text-sm font-mono text-gray-600 leading-6">{faq.answer}</p>
                 </div>
               )}

@@ -22,8 +22,12 @@ function isFaqSchemaError(error: unknown) {
   }
 
   const maybe = error as { code?: string; message?: string };
-  return (maybe.code === 'PGRST205' || maybe.code === 'PGRST204') && 
-         (maybe.message || '').includes('faqs');
+  // PGRST205/PGRST204: PostgREST missing table/column
+  // 42P01: Postgres missing relation
+  const isMissingTable = (maybe.code === 'PGRST205' || maybe.code === 'PGRST204' || maybe.code === '42P01');
+  const mentionsFaqs = (maybe.message || '').toLowerCase().includes('faqs');
+  
+  return isMissingTable && mentionsFaqs;
 }
 
 async function insertFallbackFaq(payload: FaqPayload) {
