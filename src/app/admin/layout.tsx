@@ -247,6 +247,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <Link
+            href="/admin/discounts"
+            className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname.startsWith("/admin/discounts") ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
+          >
+            <Icon icon="lucide:tag" width="18" /> Discounts
+          </Link>
+
+          <Link
             href="/admin/sellers"
             className={`px-8 py-3 flex items-center gap-3 text-sm font-mono uppercase tracking-widest transition-colors ${pathname === "/admin/sellers" ? "text-[#a58c69] font-bold bg-[#f8f8f8]" : "text-gray-500 hover:text-[#1c1a19] hover:bg-[#fafafa]"}`}
           >
