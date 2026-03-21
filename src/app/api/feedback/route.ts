@@ -18,13 +18,16 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Internal server error';
 }
 
-function isMissingFeedbackTableError(error: unknown) {
+function isFeedbackSchemaError(error: unknown) {
   if (!error || typeof error !== 'object') {
     return false;
   }
 
   const maybe = error as { code?: string; message?: string };
-  return maybe.code === 'PGRST205' && (maybe.message || '').includes('public.feedback');
+  // PGRST205: Missing table
+  // PGRST204: Missing column
+  return (maybe.code === 'PGRST205' || maybe.code === 'PGRST204') && 
+         (maybe.message || '').includes('feedback');
 }
 
 function validate(payload: Partial<FeedbackPayload>) {
@@ -93,7 +96,7 @@ export async function POST(req: Request) {
       });
 
     if (error) {
-      if (isMissingFeedbackTableError(error)) {
+      if (isFeedbackSchemaError(error)) {
         await insertFallbackFeedback(payload);
         return NextResponse.json({ success: true, fallback: true });
       }
