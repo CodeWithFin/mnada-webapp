@@ -126,6 +126,8 @@ export async function POST(req: Request) {
 
         orderDetails.forEach(item => {
           const product = products.find(p => p.id === item.id || p.mock_id === item.id);
+          if (!product) return;
+          
           const seller = (product as any)?.sellers;
           if (seller?.phone) {
             const sellerId = product.seller_id!;
