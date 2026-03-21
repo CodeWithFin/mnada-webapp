@@ -14,7 +14,12 @@ export default function AdminSubscribersPage() {
 
   const fetchSubscribers = async () => {
     try {
-      const res = await fetch(`/api/admin/subscribers?t=${Date.now()}`);
+      const token = localStorage.getItem("mnada_admin_token");
+      const res = await fetch(`/api/admin/subscribers?t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setSubscribers(data);
