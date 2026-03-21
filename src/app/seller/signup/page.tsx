@@ -67,8 +67,8 @@ export default function SellerSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] flex items-center justify-center p-5 py-20 font-mono">
-      <div className="w-full max-w-lg bg-white border border-[#e5e5e5] p-8 md:p-12 shadow-sm">
+    <div className="min-h-[100dvh] bg-[#f8f8f8] flex items-center justify-center p-5 py-12 md:py-20 font-mono">
+      <div className="w-full max-w-lg bg-white border border-[#e5e5e5] p-6 sm:p-8 md:p-12 shadow-sm">
         
         {step === 1 && (
           <div className="flex flex-col gap-8">
