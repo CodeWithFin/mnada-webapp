@@ -37,28 +37,36 @@ export async function POST(req: Request) {
     }
 
     // Resend batch sending (limit 100 per call for bulk)
-    // For simplicity, we'll send to all or chunks
-    const { data: resendData, error: resendError } = await resend.emails.send({
-      from: 'Mnada <onboarding@resend.dev>', // Should be a verified domain in production
-      to: recipients,
+    const batchRequests = recipients.map(email => ({
+      from: 'Mnada <orders@mnada.shop>',
+      to: email,
       subject: subject,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1c1a19;">
-          <h1 style="text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #eee; padding-bottom: 20px;">Mnada Collective</h1>
+          <h1 style="text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #eee; padding-bottom: 20px;">Mnada</h1>
           <div style="line-height: 1.6; font-size: 16px; margin: 20px 0;">
             ${message.replace(/\n/g, '<br/>')}
           </div>
           <hr style="border: none; border-top: 1px solid #eee; margin: 40px 0;" />
-          <p style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">
-            Mnada • Industrial Goods for the Modern Pioneer
+          <p style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px;">
+            Mnada Collective • Nakuru, Kenya
           </p>
         </div>
       `
-    });
+    }));
 
-    if (resendError) {
-      console.error('Resend Error:', resendError);
-      return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 });
+    // Chunks of 100 for Resend batch API
+    const chunkSize = 100;
+    for (let i = 0; i < batchRequests.length; i += chunkSize) {
+      const chunk = batchRequests.slice(i, i + chunkSize);
+      const { error: batchError } = await resend.batch.send(chunk);
+      if (batchError) {
+        console.error('Resend Batch Error:', batchError);
+        return NextResponse.json({ 
+          error: 'Failed to send batch emails', 
+          details: batchError 
+        }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true, count: recipients.length });
