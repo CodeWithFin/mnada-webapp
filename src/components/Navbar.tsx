@@ -110,6 +110,10 @@ export default function Navbar() {
               <Icon icon="lucide:user" width="20" strokeWidth="1.5" />
               <span className="text-sm font-mono uppercase tracking-widest">Account</span>
             </Link>
+            <Link href="/seller/signup" className="flex items-center gap-4 text-[#a58c69] font-bold" onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon icon="lucide:store" width="20" strokeWidth="1.5" />
+              <span className="text-sm font-mono uppercase tracking-widest underline decoration-2 underline-offset-4">Become a Seller</span>
+            </Link>
             <div className="flex items-center gap-4 text-[#1c1a19]">
               <Icon icon="lucide:search" width="20" strokeWidth="1.5" />
               <span className="text-sm font-mono uppercase tracking-widest">Search</span>
