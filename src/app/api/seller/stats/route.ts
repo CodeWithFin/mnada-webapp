@@ -43,14 +43,21 @@ export async function GET(req: Request) {
     if (oError) throw oError;
 
     // 4. Calculate stats
-    // We only count 'confirmed', 'dispatched', or 'delivered' for real profit
-    const validItems = orderItems.filter((item: any) => 
-      ['confirmed', 'dispatched', 'delivered'].includes(item.orders?.status)
-    );
+    // Earned: Only delivered
+    const deliveredItems = orderItems.filter((item: any) => item.orders?.status === 'delivered');
+    const earnedRevenue = deliveredItems.reduce((acc: number, item: any) => acc + ((item.price || 0) * (item.quantity || 0)), 0);
+    const earnedProfit = earnedRevenue * (1 - commissionRate);
 
-    const totalRevenue = validItems.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0);
-    const totalPotentialProfit = totalRevenue * (1 - commissionRate);
-    const salesCount = validItems.length;
+    // Potential: Confirmed or Dispatched but not yet delivered
+    const potentialItems = orderItems.filter((item: any) => 
+      ['confirmed', 'dispatched'].includes(item.orders?.status)
+    );
+    const potentialRevenue = potentialItems.reduce((acc: number, item: any) => acc + ((item.price || 0) * (item.quantity || 0)), 0);
+    const potentialProfit = potentialRevenue * (1 - commissionRate);
+
+    // Total stats for overview
+    const totalRevenue = (earnedRevenue + potentialRevenue);
+    const salesCount = (deliveredItems.length + potentialItems.length);
 
     // 5. Get recent activity (recent orders)
     const recentOrders = orderItems
@@ -61,7 +68,7 @@ export async function GET(req: Request) {
         order_id: item.order_id,
         product_name: products.find(p => p.id === item.product_id || p.mock_id === item.product_id)?.name || 'Unknown Product',
         quantity: item.quantity,
-        total: item.unit_price * item.quantity,
+        total: (item.price || 0) * (item.quantity || 0),
         status: item.orders?.status || 'unknown',
         date: item.created_at
       }));
@@ -69,7 +76,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       summary: {
         totalRevenue,
-        totalPotentialProfit,
+        earnedProfit,
+        potentialProfit,
         salesCount,
         productCount: products.length,
         commissionRate
