@@ -8,6 +8,63 @@ async function verifyAdmin(request: Request) {
   return Boolean(await verifyRoleRequest(request, 'admin'));
 }
 
+const JOURNAL_IMAGES_BUCKET = 'journal-images';
+
+function extractStoragePathFromPublicUrl(url: string) {
+  const marker = `/storage/v1/object/public/${JOURNAL_IMAGES_BUCKET}/`;
+  const markerIndex = url.indexOf(marker);
+  if (markerIndex === -1) return null;
+
+  const pathWithQuery = url.substring(markerIndex + marker.length);
+  return pathWithQuery.split('?')[0] || null;
+}
+
+async function uploadImage(file: File) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const filePath = `${fileName}`;
+
+  let { data: uploadData, error: uploadError } = await supabaseAdmin
+    .storage
+    .from(JOURNAL_IMAGES_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  // If bucket doesn't exist, try to create it and upload again
+  if (uploadError && uploadError.message.includes('Bucket not found')) {
+    const { error: createError } = await supabaseAdmin.storage.createBucket(JOURNAL_IMAGES_BUCKET, {
+      public: true,
+      allowedMimeTypes: ['image/*'],
+      fileSizeLimit: 5242880 // 5MB
+    });
+
+    if (!createError || createError.message.includes('already exists')) {
+      const retry = await supabaseAdmin
+        .storage
+        .from(JOURNAL_IMAGES_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      uploadData = retry.data;
+      uploadError = retry.error;
+    }
+  }
+
+  if (uploadError) {
+    throw new Error(`Failed to upload image: ${uploadError.message}`);
+  }
+
+  const { data: publicUrlData } = supabaseAdmin
+    .storage
+    .from(JOURNAL_IMAGES_BUCKET)
+    .getPublicUrl(uploadData!.path);
+
+  return publicUrlData.publicUrl;
+}
+
 
 export async function GET(request: Request) {
   if (!(await verifyAdmin(request))) {
@@ -32,22 +89,58 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { title, slug, excerpt, image, tag, date, read_time, content } = body;
+    const formData = await request.formData();
+    const title = formData.get("title") as string;
+    const slug = formData.get("slug") as string;
+    const excerpt = formData.get("excerpt") as string;
+    const tag = formData.get("tag") as string;
+    const date = formData.get("date") as string;
+    const read_time = formData.get("read_time") as string;
+    const is_featured = formData.get("is_featured") === "true";
+    const contentStr = formData.get("content") as string;
+    const content = JSON.parse(contentStr);
+    const imageFile = formData.get("image") as File;
 
-    const { data, error } = await supabaseAdmin
+    let imageUrl = "";
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImage(imageFile);
+      } catch (uploadErr: any) {
+        console.error("Image upload failed in POST:", uploadErr);
+        return NextResponse.json({ error: "Image upload failed: " + uploadErr.message }, { status: 500 });
+      }
+    }
+
+    let payload: any = { title, slug, excerpt, image: imageUrl, tag, date, read_time, content, is_featured };
+    
+    let { data, error } = await supabaseAdmin
       .from("journal_posts")
-      .insert([{ title, slug, excerpt, image, tag, date, read_time, content }])
+      .insert([payload])
       .select()
       .single();
 
+    // If it fails because of is_featured column missing, retry without it
+    if (error && (error.message.includes("is_featured") || error.details?.includes("is_featured"))) {
+      console.warn("Retrying POST without is_featured due to missing column");
+      delete payload.is_featured;
+      const retry = await supabaseAdmin
+        .from("journal_posts")
+        .insert([payload])
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      console.error("Database error in POST /api/admin/journal:", error);
+      return NextResponse.json({ error: "Database error: " + error.message, details: error }, { status: 400 });
     }
 
     return NextResponse.json(data);
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  } catch (err: any) {
+    console.error("Unexpected error in POST /api/admin/journal:", err);
+    return NextResponse.json({ error: err.message || "Invalid request" }, { status: 400 });
   }
 }
 
@@ -57,23 +150,69 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { id, title, slug, excerpt, image, tag, date, read_time, content } = body;
+    const formData = await request.formData();
+    const id = formData.get("id") as string;
+    const title = formData.get("title") as string;
+    const slug = formData.get("slug") as string;
+    const excerpt = formData.get("excerpt") as string;
+    const tag = formData.get("tag") as string;
+    const date = formData.get("date") as string;
+    const read_time = formData.get("read_time") as string;
+    const is_featured = formData.get("is_featured") === "true";
+    const contentStr = formData.get("content") as string;
+    const content = JSON.parse(contentStr);
+    const imageFile = formData.get("image") as File;
+    const existingImage = formData.get("existingImage") as string;
 
-    const { data, error } = await supabaseAdmin
+    let imageUrl = existingImage;
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImage(imageFile);
+      } catch (uploadErr: any) {
+        return NextResponse.json({ error: "Image upload failed: " + uploadErr.message }, { status: 500 });
+      }
+      
+      // Cleanup old image if it was in our bucket
+      if (existingImage) {
+        const oldPath = extractStoragePathFromPublicUrl(existingImage);
+        if (oldPath) {
+          await supabaseAdmin.storage.from(JOURNAL_IMAGES_BUCKET).remove([oldPath]);
+        }
+      }
+    }
+
+    let payload: any = { title, slug, excerpt, image: imageUrl, tag, date, read_time, content, is_featured, updated_at: new Date() };
+
+    let { data, error } = await supabaseAdmin
       .from("journal_posts")
-      .update({ title, slug, excerpt, image, tag, date, read_time, content, updated_at: new Date() })
+      .update(payload)
       .eq("id", id)
       .select()
       .single();
 
+    // If it fails because of is_featured column missing, retry without it
+    if (error && (error.message.includes("is_featured") || error.details?.includes("is_featured"))) {
+      console.warn("Retrying PUT without is_featured due to missing column");
+      delete payload.is_featured;
+      const retry = await supabaseAdmin
+        .from("journal_posts")
+        .update(payload)
+        .eq("id", id)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      console.error("Database error in PUT /api/admin/journal:", error);
+      return NextResponse.json({ error: "Database error: " + error.message, details: error }, { status: 400 });
     }
 
     return NextResponse.json(data);
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  } catch (err: any) {
+    console.error("Unexpected error in PUT /api/admin/journal:", err);
+    return NextResponse.json({ error: err.message || "Invalid request" }, { status: 400 });
   }
 }
 
@@ -87,6 +226,20 @@ export async function DELETE(request: Request) {
 
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Get post to find image URL for cleanup
+  const { data: post } = await supabaseAdmin
+    .from("journal_posts")
+    .select("image")
+    .eq("id", id)
+    .single();
+
+  if (post?.image) {
+    const path = extractStoragePathFromPublicUrl(post.image);
+    if (path) {
+      await supabaseAdmin.storage.from(JOURNAL_IMAGES_BUCKET).remove([path]);
+    }
   }
 
   const { error } = await supabaseAdmin

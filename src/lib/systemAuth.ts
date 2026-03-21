@@ -1,16 +1,19 @@
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export type PortalRole = 'admin';
+export type PortalRole = 'admin' | 'seller';
 
 type SystemAuthRecord = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  email?: string;
+  password_hash?: string;
 };
 
 type AuthTokenPayload = {
   username: string;
+  email?: string;
   id: string;
   role: PortalRole;
 };
@@ -19,23 +22,38 @@ const SYSTEM_AUTH_CATEGORY = 'SYSTEM_AUTH';
 const JWT_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || 'mnada2025-fallback-secret';
 
 export async function findSystemUser(username: string, role: PortalRole) {
-  if (role !== 'admin') {
-    return null;
+  if (role === 'admin') {
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .select('id, name, description')
+      .eq('category', SYSTEM_AUTH_CATEGORY)
+      .eq('name', username)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to look up admin user:', error);
+      return null;
+    }
+
+    return (data as SystemAuthRecord | null) || null;
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select('id, name, description')
-    .eq('category', SYSTEM_AUTH_CATEGORY)
-    .eq('name', username)
-    .maybeSingle();
+  if (role === 'seller') {
+    const { data, error } = await supabaseAdmin
+      .from('sellers')
+      .select('id, name, email, password_hash')
+      .eq('email', username)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Failed to look up auth user:', error);
-    return null;
+    if (error) {
+      console.error('Failed to look up seller:', error);
+      return null;
+    }
+
+    return (data as SystemAuthRecord | null) || null;
   }
 
-  return (data as SystemAuthRecord | null) || null;
+  return null;
 }
 
 export function createRoleToken(user: { id: string; name: string }, role: PortalRole) {
