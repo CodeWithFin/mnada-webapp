@@ -65,6 +65,33 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PUT(req: Request) {
+  try {
+    const isAdmin = await verifyRoleRequest(req, 'admin');
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, name, slug, hero_image_url } = await req.json();
+
+    if (!id || !name || !slug) {
+      return NextResponse.json({ error: 'ID, name and slug are required' }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .update({ name, slug: slug.toLowerCase(), hero_image_url })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request) {
   try {
     const isAdmin = await verifyRoleRequest(req, 'admin');
