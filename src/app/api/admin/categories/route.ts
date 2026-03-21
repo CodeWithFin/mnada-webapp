@@ -15,6 +15,24 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
+
+    // Self-seeding if empty
+    if (data.length === 0) {
+      console.log('Seeding initial categories...');
+      const initialCategories = [
+        { name: 'Mens', slug: 'men', hero_image_url: 'https://images.unsplash.com/photo-1630922199795-e40a1cff7f88?q=80&w=2037&auto=format&fit=crop' },
+        { name: 'Womens', slug: 'women', hero_image_url: 'https://images.unsplash.com/photo-1531469535976-c6fc3604014f?q=80&w=1335&auto=format&fit=crop' },
+        { name: 'Accessories', slug: 'accessories', hero_image_url: 'https://images.unsplash.com/photo-1586878341523-7acb55eb8c12?q=80&w=2340&auto=format&fit=crop' }
+      ];
+      
+      const { data: seededData, error: seedError } = await supabaseAdmin
+        .from('categories')
+        .insert(initialCategories)
+        .select();
+      
+      if (!seedError) return NextResponse.json(seededData);
+    }
+
     return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
