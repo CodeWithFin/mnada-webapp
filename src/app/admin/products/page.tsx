@@ -16,6 +16,10 @@ interface Product {
   is_new: boolean;
   description?: string;
   images?: string[];
+  seller_id?: string;
+  sellers?: {
+    name: string;
+  };
 }
 
 export default function AdminProductsPage() {
@@ -46,7 +50,7 @@ export default function AdminProductsPage() {
     // We can use the public client because products are readable by everyone
     let query = supabase
       .from('products')
-      .select('*')
+      .select('*, sellers(name)')
       .neq('category', 'SYSTEM_AUTH');
     
     if (categoryFilter) {
@@ -521,9 +525,15 @@ export default function AdminProductsPage() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#a58c69]">{product.category}</span>
                   {product.is_new && <span className="bg-[#1c1a19] text-white text-[9px] uppercase tracking-widest px-2 py-0.5">New</span>}
                 </div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-[#1c1a19] line-clamp-2 mb-4 leading-relaxed">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#1c1a19] line-clamp-2 mb-2 leading-relaxed">
                   {product.name}
                 </h3>
+                {product.sellers?.name && (
+                  <div className="flex items-center gap-1 mb-2 text-[10px] font-mono text-gray-400 uppercase">
+                    <Icon icon="lucide:store" width="10" />
+                    <span>Seller: {product.sellers.name}</span>
+                  </div>
+                )}
                 <div className="mt-auto flex justify-between items-center border-t border-[#e5e5e5] pt-4">
                   <span className="text-sm font-mono text-[#1c1a19]">KSh {product.price.toFixed(2)}</span>
                   <span className="text-[10px] font-mono text-gray-400">ID: {product.mock_id.substring(0,6)}...</span>
