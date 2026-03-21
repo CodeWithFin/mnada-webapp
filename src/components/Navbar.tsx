@@ -47,6 +47,7 @@ export default function Navbar() {
 
             {/* Desktop Links */}
             <div className="nav_menu hidden lg:flex items-center gap-12 absolute left-1/2 transform -translate-x-1/2">
+              <Link href="/new-arrivals" className="nav_link text-xs uppercase font-bold tracking-widest text-[#a58c69] hover:text-[#1c1a19] transition-colors">New arrivals</Link>
               <Link href="/mens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Mens</Link>
               <Link href="/womens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Womens</Link>
               <Link href="/journal" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Journal</Link>
@@ -82,6 +83,13 @@ export default function Navbar() {
       >
         <div className="flex flex-col h-full bg-[#f8f8f8] p-8">
           <div className="flex flex-col gap-6 text-2xl font-bold uppercase tracking-widest text-[#1c1a19]">
+            <Link 
+              href="/new-arrivals" 
+              className="text-[#a58c69] hover:text-[#1c1a19] transition-colors border-b border-[#e5e5e5] pb-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              New arrivals
+            </Link>
             <Link 
               href="/mens" 
               className="hover:text-[#a58c69] transition-colors border-b border-[#e5e5e5] pb-4"

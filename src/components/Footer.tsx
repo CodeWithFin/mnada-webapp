@@ -25,10 +25,10 @@ export default function Footer() {
             <div className="footer_links-wrapper col-span-1 lg:col-span-2">
               <h4 className="font-bold uppercase tracking-widest text-[10px] text-[#a58c69] mb-6">Shop</h4>
               <ul className="space-y-4">
-                <li><Link href="/" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">New Arrivals</Link></li>
+                <li><Link href="/new-arrivals" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">New Arrivals</Link></li>
                 <li><Link href="/mens" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Mens</Link></li>
                 <li><Link href="/womens" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Womens</Link></li>
-                <li><Link href="#" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Accessories</Link></li>
+                <li><Link href="/category/accessories" className="text-xs text-[#1c1a19] hover:text-[#a58c69] transition-colors uppercase tracking-wide">Accessories</Link></li>
               </ul>
             </div>
 
