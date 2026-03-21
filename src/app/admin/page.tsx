@@ -40,6 +40,7 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -102,6 +103,35 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDeleteAllOrders = async () => {
+    const confirmed = window.confirm("CRITICAL: This will PERMANENTLY delete ALL orders and order items from the database. This action cannot be undone. Are you absolutely sure?");
+    if (!confirmed) return;
+
+    setIsDeletingAll(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("mnada_admin_token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || "Failed to delete orders");
+      }
+
+      setOrders([]);
+      alert("All orders have been successfully deleted.");
+    } catch (error) {
+      setError(getErrorMessage(error, "Failed to delete orders"));
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   const filteredOrders = orders.filter((order) =>
     statusFilter === "all" ? true : order.status === statusFilter
   );
@@ -149,6 +179,14 @@ export default function AdminOrdersPage() {
             className="h-10 px-4 border border-[#e5e5e5] bg-white font-mono text-xs uppercase tracking-widest text-[#1c1a19] hover:bg-[#f8f8f8] transition-colors flex items-center gap-2"
           >
             <Icon icon="lucide:refresh-cw" width="14" /> Refresh
+          </button>
+          <button
+            onClick={handleDeleteAllOrders}
+            disabled={isDeletingAll || orders.length === 0}
+            className="h-10 px-4 border border-red-200 bg-red-50 font-mono text-xs uppercase tracking-widest text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icon icon={isDeletingAll ? "lucide:loader" : "lucide:trash-2"} width="14" className={isDeletingAll ? "animate-spin" : ""} />
+            {isDeletingAll ? "Deleting..." : "Delete All"}
           </button>
           <div className="text-xs font-mono bg-[#1c1a19] text-white px-4 py-2 uppercase tracking-widest">
             {filteredOrders.length} Visible Orders
