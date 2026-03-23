@@ -49,7 +49,7 @@ export default function Collections() {
                   </div>
                   </div>
                 </Link>
-                <Link href="/category/accessories" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
+                <Link href="/accessories" className="collection-item_small group relative flex-1 min-h-[250px] overflow-hidden bg-[#f0f0f0] block">
                   <Image 
                     src="https://images.unsplash.com/photo-1586878341523-7acb55eb8c12?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt="Accessories"
