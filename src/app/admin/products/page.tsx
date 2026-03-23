@@ -36,7 +36,7 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    category: "Men\'s",
+    category: "men",
     description: "",
     isNew: false
   });
@@ -143,7 +143,7 @@ export default function AdminProductsPage() {
 
   const resetForm = () => {
     setEditingProductId(null);
-    setFormData({ name: "", price: "", category: categories[0]?.name || "Men's", description: "", isNew: false });
+    setFormData({ name: "", price: "", category: categories[0]?.slug || "men", description: "", isNew: false });
     setImageFiles([]);
     setImagePreviews([]);
     setExistingImages([]);
@@ -428,7 +428,7 @@ export default function AdminProductsPage() {
                     className="w-full h-12 border border-[#e5e5e5] px-4 font-mono text-sm focus:outline-none focus:border-[#1c1a19] bg-white capitalize"
                   >
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option key={cat.id} value={cat.slug}>{cat.name}</option>
                     ))}
                   </select>
                 </div>

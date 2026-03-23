@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifyRoleRequest } from '@/lib/systemAuth';
 import { nanoid } from 'nanoid';
+import { ensureBucket } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,8 @@ export async function POST(req: Request) {
     // Upload images logic (simplified for seller, reusing logic from admin products if possible)
     // Actually, I'll need to implement the upload here or refactor.
     // For now, I'll implement a basic version.
+    // Ensure bucket exists before uploading
+    await ensureBucket('product-images');
     
     const imageUrls: string[] = [];
     for (const image of images) {
@@ -140,6 +143,11 @@ export async function PUT(req: Request) {
     }
 
     let imageUrls = [...existingImages];
+
+    // Ensure bucket exists before uploading
+    if (newImages.length > 0) {
+      await ensureBucket('product-images');
+    }
 
     // Upload new images
     for (const image of newImages) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 import { verifyRoleRequest } from "@/lib/systemAuth";
+import { ensureBucket } from "@/lib/storage";
 
 // Helper to verify admin token
 async function verifyAdmin(request: Request) {
@@ -24,34 +25,15 @@ async function uploadImage(file: File) {
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
   const filePath = `${fileName}`;
 
-  let { data: uploadData, error: uploadError } = await supabaseAdmin
+  await ensureBucket(JOURNAL_IMAGES_BUCKET);
+
+  const { data: uploadData, error: uploadError } = await supabaseAdmin
     .storage
     .from(JOURNAL_IMAGES_BUCKET)
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: false
     });
-
-  // If bucket doesn't exist, try to create it and upload again
-  if (uploadError && uploadError.message.includes('Bucket not found')) {
-    const { error: createError } = await supabaseAdmin.storage.createBucket(JOURNAL_IMAGES_BUCKET, {
-      public: true,
-      allowedMimeTypes: ['image/*'],
-      fileSizeLimit: 5242880 // 5MB
-    });
-
-    if (!createError || createError.message.includes('already exists')) {
-      const retry = await supabaseAdmin
-        .storage
-        .from(JOURNAL_IMAGES_BUCKET)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      uploadData = retry.data;
-      uploadError = retry.error;
-    }
-  }
 
   if (uploadError) {
     throw new Error(`Failed to upload image: ${uploadError.message}`);

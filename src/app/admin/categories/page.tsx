@@ -80,23 +80,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const uploadImage = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `hero/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('categories')
-      .upload(filePath, file);
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('categories')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
+  // uploadImage removed: moved server-side for better security and bucket management
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,27 +89,29 @@ export default function AdminCategoriesPage() {
     setUploadProgress(0);
 
     try {
-      let hero_image_url = formData.hero_image_url;
-
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('slug', formData.slug);
+      formDataToSend.append('hero_image_url', formData.hero_image_url);
+      
+      if (editingCategory) {
+        formDataToSend.append('id', editingCategory.id);
+      }
+      
       if (selectedFile) {
-        setUploadProgress(20);
-        hero_image_url = await uploadImage(selectedFile);
-        setUploadProgress(80);
+        setUploadProgress(40);
+        formDataToSend.append('image', selectedFile);
       }
 
       const token = localStorage.getItem("mnada_admin_token");
       const method = editingCategory ? 'PUT' : 'POST';
-      const body = editingCategory 
-        ? { ...formData, id: editingCategory.id, hero_image_url }
-        : { ...formData, hero_image_url };
 
       const res = await fetch('/api/admin/categories', {
         method,
         headers: { 
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(body),
+        body: formDataToSend,
       });
 
       if (res.ok) {

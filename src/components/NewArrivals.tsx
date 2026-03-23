@@ -51,47 +51,56 @@ function normalizeCategory(value: string) {
   return value.toLowerCase().trim();
 }
 
-function tabToCategory(tab: "All" | "Men's" | "Women's") {
-  if (tab === "Men's") return 'men';
-  if (tab === "Women's") return 'women';
-  return 'all';
-}
-
 export default function NewArrivals() {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"All" | "Men's" | "Women's">("All");
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, mock_id, name, price, image, category, is_new')
-        .neq('category', 'SYSTEM_AUTH')
-        .order('created_at', { ascending: false })
-        .limit(8);
-        
-      if (data && !error) {
-        setProducts(data.map(p => ({
-          id: p.mock_id || p.id,
-          name: p.name,
-          price: Number(p.price),
-          image: p.image,
-          category: p.category,
-          isNew: p.is_new
-        })));
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch categories first
+        const catRes = await fetch('/api/admin/categories');
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          setCategories(catData.filter((c: any) => c.name !== 'SYSTEM_AUTH'));
+        }
+
+        // Fetch products
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, mock_id, name, price, image, category, is_new')
+          .neq('category', 'SYSTEM_AUTH')
+          .order('created_at', { ascending: false })
+          .limit(100);
+          
+        if (data && !error) {
+          setProducts(data.map(p => ({
+            id: p.mock_id || p.id,
+            name: p.name,
+            price: Number(p.price),
+            image: p.image,
+            category: p.category,
+            isNew: p.is_new
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     
-    fetchProducts();
+    fetchInitialData();
   }, []);
 
   const filteredProducts = products.filter(product => {
-    if (activeTab === "All") return true;
-    return normalizeCategory(product.category) === tabToCategory(activeTab);
+    if (activeTab === "all") return true;
+    return normalizeCategory(product.category) === normalizeCategory(activeTab);
   });
 
   const handleQuickAdd = (product: Product) => {
@@ -118,11 +127,11 @@ export default function NewArrivals() {
               <h3 className="font-mono text-base font-light text-[#1c1a19]">
                 New Arrivals
               </h3>
-              <div className="new-arrivals_tabs flex gap-2">
+              <div className="new-arrivals_tabs flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                 <button 
-                  onClick={() => setActiveTab("All")}
-                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
-                    activeTab === "All" 
+                  onClick={() => setActiveTab("all")}
+                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all whitespace-nowrap ${
+                    activeTab === "all" 
                       ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
                       : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
                   }`}
@@ -130,28 +139,20 @@ export default function NewArrivals() {
                 >
                   All
                 </button>
-                <button 
-                  onClick={() => setActiveTab("Men's")}
-                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
-                    activeTab === "Men's" 
-                      ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
-                      : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
-                  }`}
-                  type="button"
-                >
-                  Men&apos;s
-                </button>
-                <button 
-                  onClick={() => setActiveTab("Women's")}
-                  className={`px-5 py-2 text-sm font-mono border rounded-none transition-all ${
-                    activeTab === "Women's" 
-                      ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
-                      : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
-                  }`}
-                  type="button"
-                >
-                  Women&apos;s
-                </button>
+                {categories.map((cat) => (
+                  <button 
+                    key={cat.id}
+                    onClick={() => setActiveTab(cat.slug)}
+                    className={`px-5 py-2 text-sm font-mono border rounded-none transition-all whitespace-nowrap ${
+                      activeTab === cat.slug
+                        ? "border-[#1c1a19] bg-[#1c1a19] text-white hover:opacity-90" 
+                        : "border-[#e5e5e5] text-[#1c1a19] bg-transparent hover:border-[#1c1a19]"
+                    }`}
+                    type="button"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
               </div>
             </div>
 
