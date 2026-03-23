@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifyRoleRequest } from '@/lib/systemAuth';
+import { ensureBucket } from '@/lib/storage';
+
+const CATEGORIES_BUCKET = 'categories';
 
 export async function GET(req: Request) {
   try {
-    const isAdmin = await verifyRoleRequest(req, 'admin');
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // GET categories logic (accessible to all roles for product creation/browsing)
 
     const { data, error } = await supabaseAdmin
       .from('categories')
@@ -46,10 +46,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, slug, hero_image_url } = await req.json();
+    const formData = await req.formData();
+    const name = formData.get('name') as string;
+    const slug = formData.get('slug') as string;
+    let hero_image_url = formData.get('hero_image_url') as string || '';
+    const imageFile = formData.get('image') as File | null;
 
     if (!name || !slug) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
+    }
+
+    // Handle server-side image upload if a file was provided
+    if (imageFile && imageFile.size > 0) {
+      await ensureBucket(CATEGORIES_BUCKET);
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `hero/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        .from(CATEGORIES_BUCKET)
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        throw new Error(`Failed to upload hero image: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabaseAdmin.storage
+        .from(CATEGORIES_BUCKET)
+        .getPublicUrl(filePath);
+      
+      hero_image_url = publicUrl;
     }
 
     const { data, error } = await supabaseAdmin
@@ -61,6 +87,7 @@ export async function POST(req: Request) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (error: any) {
+    console.error("Error in POST /api/admin/categories:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -72,10 +99,37 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, name, slug, hero_image_url } = await req.json();
+    const formData = await req.formData();
+    const id = formData.get('id') as string;
+    const name = formData.get('name') as string;
+    const slug = formData.get('slug') as string;
+    let hero_image_url = formData.get('hero_image_url') as string || '';
+    const imageFile = formData.get('image') as File | null;
 
     if (!id || !name || !slug) {
       return NextResponse.json({ error: 'ID, name and slug are required' }, { status: 400 });
+    }
+
+    // Handle server-side image upload if a new file was provided
+    if (imageFile && imageFile.size > 0) {
+      await ensureBucket(CATEGORIES_BUCKET);
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `hero/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        .from(CATEGORIES_BUCKET)
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        throw new Error(`Failed to upload new hero image: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabaseAdmin.storage
+        .from(CATEGORIES_BUCKET)
+        .getPublicUrl(filePath);
+      
+      hero_image_url = publicUrl;
     }
 
     const { data, error } = await supabaseAdmin
@@ -88,6 +142,7 @@ export async function PUT(req: Request) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (error: any) {
+    console.error("Error in PUT /api/admin/categories:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

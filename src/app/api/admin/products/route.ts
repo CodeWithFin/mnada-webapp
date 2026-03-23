@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifyRoleRequest } from '@/lib/systemAuth';
+import { ensureBucket } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,7 @@ function inferContentTypeAndExt(url: string, contentTypeHeader: string | null) {
 }
 
 async function migrateExternalUrlToBucket(externalUrl: string) {
+  await ensureBucket(PRODUCT_IMAGES_BUCKET);
   const res = await fetch(externalUrl);
   if (!res.ok) {
     throw new Error(`Failed to fetch existing image URL (${res.status})`);
@@ -125,6 +127,9 @@ export async function POST(req: Request) {
 
     const uploadedImageUrls: string[] = [];
     const uploadedFilePaths: string[] = [];
+
+    // Ensure bucket exists before uploading
+    await ensureBucket(PRODUCT_IMAGES_BUCKET);
 
     // 1. Upload the images to Supabase Storage using Admin Client
     for (const file of files) {
@@ -231,6 +236,7 @@ export async function PUT(req: Request) {
 
     // Check if there are new images to upload
     if (files.length > 0 && files[0].size > 0 && files[0].name !== 'undefined') {
+      await ensureBucket(PRODUCT_IMAGES_BUCKET);
       for (const file of files) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -370,6 +376,7 @@ export async function DELETE(req: Request) {
       }
 
       if (filesToRemove.size > 0) {
+        await ensureBucket(PRODUCT_IMAGES_BUCKET);
         await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(Array.from(filesToRemove));
       }
 
@@ -409,6 +416,7 @@ export async function DELETE(req: Request) {
       );
 
       if (filesToRemove.length > 0) {
+        await ensureBucket(PRODUCT_IMAGES_BUCKET);
         await supabaseAdmin.storage.from(PRODUCT_IMAGES_BUCKET).remove(filesToRemove);
       }
     }

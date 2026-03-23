@@ -29,11 +29,8 @@ export default function Hero() {
                 Provisions for<br/>the Wild
               </h1>
               <div className="hero_buttons flex flex-col sm:flex-row items-start gap-4 opacity-0 animate-fade-up delay-200">
-                <Link href="/mens" className="button is-primary inline-block px-8 py-4 bg-[#a58c69] text-white text-xs font-bold uppercase tracking-widest border border-[#a58c69] hover:bg-[#8f6f4a] hover:border-[#8f6f4a] transition-all">
-                  Shop Mens
-                </Link>
-                <Link href="/womens" className="button is-secondary inline-block px-8 py-4 bg-transparent text-white text-xs font-bold uppercase tracking-widest border border-white hover:bg-white hover:text-[#1c1a19] transition-all">
-                  Shop Womens
+                <Link href="/new-arrivals" className="button is-primary inline-block px-10 py-4 bg-white text-[#1c1a19] text-xs font-bold uppercase tracking-widest border border-white hover:bg-transparent hover:text-white transition-all">
+                  Shop Now
                 </Link>
               </div>
             </div>
