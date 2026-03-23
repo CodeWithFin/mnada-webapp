@@ -50,6 +50,7 @@ export default function Navbar() {
               <Link href="/new-arrivals" className="nav_link text-xs uppercase font-bold tracking-widest text-[#a58c69] hover:text-[#1c1a19] transition-colors">New arrivals</Link>
               <Link href="/mens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Mens</Link>
               <Link href="/womens" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Womens</Link>
+              <Link href="/accessories" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Accessories</Link>
               <Link href="/journal" className="nav_link text-xs uppercase tracking-widest hover:text-[#a58c69] transition-colors">Journal</Link>
             </div>
 
@@ -103,6 +104,13 @@ export default function Navbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Womens
+            </Link>
+            <Link 
+              href="/accessories" 
+              className="hover:text-[#a58c69] transition-colors border-b border-[#e5e5e5] pb-4"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Accessories
             </Link>
             <Link
               href="/journal"

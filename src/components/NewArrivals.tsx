@@ -123,11 +123,11 @@ export default function NewArrivals() {
           <div className="padding-section-medium py-12">
             
             {/* Header Component */}
-            <div className="new-arrivals_header flex flex-row flex-nowrap justify-between items-center border-t border-[#1c1a19] pt-7 pb-7 lg:pl-[34px] lg:pr-[34px] mb-0 w-full">
-              <h3 className="font-mono text-base font-light text-[#1c1a19]">
+            <div className="new-arrivals_header flex flex-col sm:flex-row justify-between items-start sm:items-center border-t border-[#1c1a19] pt-7 pb-7 lg:pl-[34px] lg:pr-[34px] mb-0 w-full gap-4 sm:gap-0">
+              <h3 className="font-mono text-base font-light text-[#1c1a19] whitespace-nowrap">
                 New Arrivals
               </h3>
-              <div className="new-arrivals_tabs flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              <div className="new-arrivals_tabs flex gap-2 overflow-x-auto scrollbar-hide pb-1 w-full sm:w-auto">
                 <button 
                   onClick={() => setActiveTab("all")}
                   className={`px-5 py-2 text-sm font-mono border rounded-none transition-all whitespace-nowrap ${
